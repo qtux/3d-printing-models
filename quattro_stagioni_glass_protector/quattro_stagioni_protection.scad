@@ -26,6 +26,9 @@ straight_part_starts_at = 25; // height at which the straight printing starts (t
 square_size = 35;
 size_round_parts = 60;
 
+d_lower_bottom = 95; // bottom diameter before first curvage
+circular_part_ends_at = 3; // height at which the bottom circular part ends
+
 // bottom diameter after first curvage
 d_bottom = 102;
 
@@ -35,23 +38,29 @@ large_glass = [1,1,1]; // 1.5 l glass
 
 module Protection () {
 	// bottom layer
-	cylinder(d=d_bottom,h=1);
+	cylinder(d=d_lower_bottom,h=1);
 
 	// define bottom part below tube
 	module Bottom (x=1,y=1,z=1) {
 		scale([x,y,z]) {
-			intersection() {
-				// bottom round part
-				linear_extrude(height=straight_part_starts_at, scale = [1.4,1.4], slices = 20, twist = 0, $fn=100) {
-					circle(d=d_bottom);
-				}
-				// bottom cornered part
-				translate([0, 0, straight_part_starts_at]){
-					mirror([0,0,1]){
-						linear_extrude(height=straight_part_starts_at, scale = [0.92,0.92], slices = 20, twist = 0, $fn=100) {
-							scale([0.72,0.72,1]) {
-								offset(r = size_round_parts) {
-									square(square_size, center = true);
+			// lowest circular part
+			linear_extrude(height=circular_part_ends_at, scale = [d_bottom/d_lower_bottom,d_bottom/d_lower_bottom], slices = 20, twist = 0, $fn=100) {
+				circle(d=d_lower_bottom);
+			}
+			translate([0,0,circular_part_ends_at]) {
+				intersection() {
+					// bottom circular part
+					linear_extrude(height=straight_part_starts_at, scale = [1.4,1.4], slices = 20, twist = 0, $fn=100) {
+						circle(d=d_bottom);
+					}
+					// bottom cornered part
+					translate([0, 0, straight_part_starts_at]){
+						mirror([0,0,1]){
+							linear_extrude(height=straight_part_starts_at, scale = [0.92,0.92], slices = 20, twist = 0, $fn=100) {
+								scale([0.72,0.72,1]) {
+									offset(r = size_round_parts) {
+										square(square_size, center = true);
+									}
 								}
 							}
 						}
@@ -67,7 +76,7 @@ module Protection () {
 	}
 
 	// tube
-	translate([0, 0, straight_part_starts_at]) {
+	translate([0, 0, straight_part_starts_at+circular_part_ends_at]) {
 		scale([0.72,0.72,1]) {
 			linear_extrude(height = total_height - straight_part_starts_at, twist = 0, slices = 60, $fn=100) {
 				difference() {

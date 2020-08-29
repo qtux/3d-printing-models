@@ -17,20 +17,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-// print in vase mode
+// print in vase mode with 3 bottom layers
 
 total_height = 150; // height of the case (in mm)
-straight_part_starts_at = 25; // height at which the straight printing starts (tube)
+straight_part_starts_at = 55; // height at which the straight printing starts (tube)
 
 // glass is square with rounded edges
 square_size = 35;
 size_round_parts = 60;
+scale_factor_x = 0.73;
+scale_factor_y = 0.73;
 
+// lower part is round
 d_lower_bottom = 95; // bottom diameter before first curvage
-circular_part_ends_at = 3; // height at which the bottom circular part ends
+c1_height = 3; // height of the first circular part
 
-// bottom diameter after first curvage
-d_bottom = 102;
+d_c1 = d_lower_bottom + 7; // diameter after first curvage
+c2_height = 3; // height of the second circular part
+
+d_c2 = d_c1 + 4; // diameter after second curvage
 
 // scale values to fit glass sizes
 small_glass = [0.75,0.75,0.6]; // 500 ml glass
@@ -40,27 +45,49 @@ module Protection () {
 	// bottom layer
 	cylinder(d=d_lower_bottom,h=1);
 
+	// define bottom circular part angling upwards
+	// less complex: create gradually increasing linear extrude scales instead
+	module Circular_upwards_angling_part(outer_scale, inner_scale) {
+		translate([0, 0, c1_height + c2_height]) {
+			linear_extrude(height=straight_part_starts_at - c1_height - c2_height, scale = [outer_scale,outer_scale], slices = 20, twist = 0, $fn=100) {
+				scale([inner_scale,inner_scale,1]) {
+					circle(d=d_c2);
+				}
+			}
+		}
+	}
+
 	// define bottom part below tube
 	module Bottom (x=1,y=1,z=1) {
 		scale([x,y,z]) {
-			// lowest circular part
-			linear_extrude(height=circular_part_ends_at, scale = [d_bottom/d_lower_bottom,d_bottom/d_lower_bottom], slices = 20, twist = 0, $fn=100) {
+
+			// lowest circular part c1
+			linear_extrude(height=c1_height, scale = [d_c1/d_lower_bottom,d_c1/d_lower_bottom], slices = 20, twist = 0, $fn=100) {
 				circle(d=d_lower_bottom);
 			}
-			translate([0,0,circular_part_ends_at]) {
-				intersection() {
-					// bottom circular part
-					linear_extrude(height=straight_part_starts_at, scale = [1.4,1.4], slices = 20, twist = 0, $fn=100) {
-						circle(d=d_bottom);
-					}
-					// bottom cornered part
-					translate([0, 0, straight_part_starts_at]){
-						mirror([0,0,1]){
-							linear_extrude(height=straight_part_starts_at, scale = [0.92,0.92], slices = 20, twist = 0, $fn=100) {
-								scale([0.72,0.72,1]) {
-									offset(r = size_round_parts) {
-										square(square_size, center = true);
-									}
+			// stacked circular part c2
+			translate([0,0,c1_height]) {
+				linear_extrude(height=c2_height, scale = [d_c2/d_c1,d_c2/d_c1], slices = 20, twist = 0, $fn=100) {
+					circle(d=d_c1);
+				}
+			}
+
+			intersection() {
+				//bottom circular parts (angling outwards to create a curved scaling)
+				Circular_upwards_angling_part(1.35, 1);
+				Circular_upwards_angling_part(1.25, 1.01);
+				Circular_upwards_angling_part(1.2, 1.02);
+				Circular_upwards_angling_part(1.17, 1.03);
+				Circular_upwards_angling_part(1.16, 1.035);
+				Circular_upwards_angling_part(1.13, 1.05);
+				
+				// bottom cornered part
+				translate([0, 0, straight_part_starts_at]){
+					mirror([0,0,1]){
+						linear_extrude(height=straight_part_starts_at - c1_height - c2_height, scale = [0.98,0.98], slices = 20, twist = 0, $fn=100) {
+							scale([scale_factor_x,scale_factor_y,1]) {
+								offset(r = size_round_parts) {
+									square(square_size, center = true);
 								}
 							}
 						}
@@ -76,8 +103,8 @@ module Protection () {
 	}
 
 	// tube
-	translate([0, 0, straight_part_starts_at+circular_part_ends_at]) {
-		scale([0.72,0.72,1]) {
+	translate([0, 0, straight_part_starts_at]) {
+		scale([scale_factor_x,scale_factor_y,1]) {
 			linear_extrude(height = total_height - straight_part_starts_at, twist = 0, slices = 60, $fn=100) {
 				difference() {
 					offset(r = size_round_parts) {
@@ -98,3 +125,6 @@ module Protection () {
  
 //cylinder(d=84.5,h=1); // for size comparison (small glass)
 //cylinder(d=112.5,h=1); // for size comparison (large glass)
+//translate([0,0,100]){cube([110,112.5,1], center = true);} // for size comparison considering non-square glass (large glass)
+//translate([-70,0,0]){cube([2,2,straight_part_starts_at]);} // for height comparison
+//translate([-75,0,0]){cube([2,2,total_height]);} // for height comparison

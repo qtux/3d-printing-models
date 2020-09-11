@@ -38,12 +38,19 @@ c2_height = 3; // height of the second circular part
 d_c2 = d_c1 + 4; // diameter after second curvage
 
 // scale values to fit glass sizes
-small_glass = [0.75,0.75,0.6]; // 500 ml glass
-large_glass = [1,1,1]; // 1.5 l glass
+glass_scale = [1,1,1]; // 1.5 l glass
+small = true;
+if (small) {
+	glass_scale = [0.75,0.75,0.6]; // 500 ml glass
+	d_lower_bottom = d_lower_bottom + d_lower_bottom/26; // for more stability
+}
 
 module Protection () {
 	// bottom layer
-	cylinder(d=d_lower_bottom,h=1);
+	difference() {
+		cylinder(d=d_lower_bottom,h=1);
+		cylinder(d=5*((d_lower_bottom)/6),h=1);
+	}
 
 	// define bottom circular part angling upwards
 	// less complex: create gradually increasing linear extrude scales instead
@@ -61,14 +68,21 @@ module Protection () {
 	module Bottom (x=1,y=1,z=1) {
 		scale([x,y,z]) {
 
-			// lowest circular part c1
-			linear_extrude(height=c1_height, scale = [d_c1/d_lower_bottom,d_c1/d_lower_bottom], slices = 20, twist = 0, $fn=100) {
-				circle(d=d_lower_bottom);
-			}
-			// stacked circular part c2
-			translate([0,0,c1_height]) {
-				linear_extrude(height=c2_height, scale = [d_c2/d_c1,d_c2/d_c1], slices = 20, twist = 0, $fn=100) {
-					circle(d=d_c1);
+			// small glass is prone to tear between the two circular parts
+			if (small) {
+				linear_extrude(height=c1_height + c2_height, scale = [d_c2/(d_lower_bottom),d_c2/(d_lower_bottom)], slices = 20, twist = 0, $fn=100) {
+					circle(d=d_lower_bottom);
+				}
+			} else {
+				// lowest circular part c1
+				linear_extrude(height=c1_height, scale = [d_c1/d_lower_bottom,d_c1/d_lower_bottom], slices = 20, twist = 0, $fn=100) {
+					circle(d=d_lower_bottom);
+				}
+				// stacked circular part c2
+				translate([0,0,c1_height]) {
+					linear_extrude(height=c2_height, scale = [d_c2/d_c1,d_c2/d_c1], slices = 20, twist = 0, $fn=100) {
+						circle(d=d_c1);
+					}
 				}
 			}
 
@@ -119,7 +133,7 @@ module Protection () {
 	 }
  }
  
- scale(large_glass) {
+ scale(glass_scale) {
 	Protection();
  }
  

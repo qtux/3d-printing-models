@@ -37,16 +37,12 @@ c2_height = 3; // height of the second circular part
 
 d_c2 = d_c1 + 4; // diameter after second curvage
 
-// scale values to fit glass sizes
-glass_scale = [1,1,1]; // 1.5 l glass
+// small 500 ml or large 1.5 l glass
 small = true;
-if (small) {
-	glass_scale = [0.75,0.75,0.6]; // 500 ml glass
-	d_lower_bottom = d_lower_bottom + d_lower_bottom/26; // for more stability
-}
 
 module Protection () {
 	// bottom layer
+	d_lower_bottom = small ? d_lower_bottom + d_lower_bottom/26 : d_lower_bottom; // for more stability
 	difference() {
 		cylinder(d=d_lower_bottom,h=1);
 		cylinder(d=5*((d_lower_bottom)/6),h=1);
@@ -133,7 +129,8 @@ module Protection () {
 	 }
  }
  
- scale(glass_scale) {
+// scale values to fit glass sizes
+ scale(small ? [0.75,0.75,0.6] : [1,1,1]) { // 500 ml glass : 1.5 l glass
 	Protection();
  }
  

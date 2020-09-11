@@ -25,8 +25,8 @@ straight_part_starts_at = 55; // height at which the straight printing starts (t
 // glass is square with rounded edges
 square_size = 35;
 size_round_parts = 60;
-scale_factor_x = 0.73;
-scale_factor_y = 0.73;
+scale_factor_x = 0.74;
+scale_factor_y = 0.74;
 
 // lower part is round
 d_lower_bottom = 95; // bottom diameter before first curvage

@@ -18,6 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use <threads.scad>
+
 module pyramid(b_width, t_width, b_depth, t_depth, height) {
     linear_extrude(height=height, scale=[t_width/b_width, t_depth/b_depth]) square([b_width, b_depth], center=true);
 }
@@ -65,8 +67,13 @@ module outer_box(width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w =
         rotate([90,0,0]) cutout(9.5, 8, 5.5, 4, wall_d/4, wall_d);
     }
 
-    // threaded stands - TODO use threadlib
-    stand_r = 3.5;
+    // threaded stands
+    stand_r = 2.5;
+    screw_h = 3.5 + 0.5; // real screw height + 0.5 mm offset
+    screw_d = 2;
+    // ensure that screw fits into stand
+    assert(screw_h <= stand_h);
+    assert(screw_d + 1 <= stand_r * 2);
     for (rel_stand_pos = [
         [24.85,  9.475,  0], // left-bottom
         [24.85,  66.725, 0], // left-top
@@ -75,7 +82,17 @@ module outer_box(width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w =
         [260.15, 66.925, 0], // right-top
         [266.55, 9.575,  0], // right-bottom
     ]) {
-        translate([wall_w, wall_d, wall_h] + rel_stand_pos) cylinder(h=stand_h, r=stand_r);
+        translate([wall_w, wall_d, wall_h] + rel_stand_pos)
+        difference() {
+            cylinder(h=stand_h, r=stand_r);
+            translate([0, 0, stand_h - screw_h])
+            metric_thread(
+                diameter=screw_d,
+                pitch=0.5, // 3.5 mm travel per 7 turns
+                length=screw_h,
+                internal=true
+            );
+        }
     }
 
     // outer stands

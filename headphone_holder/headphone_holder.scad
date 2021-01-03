@@ -2,7 +2,7 @@ table_height = 25;
 
 gripper_width = table_height*1.5;
 gripper_length = table_height*2;
-gripper_thickness = 4;
+gripper_thickness = 5;
 
 holder_height = 30;
 holder_width = gripper_length/2;
@@ -81,6 +81,22 @@ module Support() {
 Support();
 rotate(180,[0,0,1]) {
 	Support();
+}
+
+// support
+module BackSupport() {
+	rotate(90,[0,0,1]) {
+		translate([-2*holder_width/3,0,-table_height/2-holder_height/4]) {
+			rotate(45,[0,1,0]) {
+				cube([holder_height/1.5, holder_thickness, holder_thickness*1.5], center=true);
+			}
+		}
+	}
+}
+
+difference() {
+	BackSupport();
+	Table();
 }
 
 // holder

@@ -28,6 +28,7 @@ house_height = lcd_outer_height+ridge_height+1+ridge_height;
 
 house_roof_height = 12;
 
+floor_thickness = 1;
 
 module lighthouseLight(wall=0) {
 	translate([0,0,lower_part_height+light_part_height/2]) {
@@ -287,6 +288,16 @@ module windows() {
 	house_windows(-1);
 }
 
+module usbSlot() {
+	height = 12;
+	width = 7;
+	translate([-house_width/2, lower_d-12-width/2-wall_thickness/2, house_height/2-display_vertical_shift]) {
+		cube([wall_thickness*2, width+wall_thickness, height+0.4], center=true);
+	}
+	// for position comparison
+	//translate([-house_width/2, lower_d-12/2, 17/2]) #cube([1,12,17], center=true);
+}
+
 module buildingComplex() {
 	difference() {
 		lighthouseHouse();
@@ -305,14 +316,18 @@ module buildingComplex() {
 }
 
 module building() {
-	// add windows
+	// add USB slot
 	difference() {
-		// add door
+		// add windows
 		difference() {
-			buildingComplex();
-			door();
+			// add door
+			difference() {
+				buildingComplex();
+				door();
+			}
+			windows();
 		}
-		windows();
+		usbSlot();
 	}
 
 	// cut away inner arch
@@ -326,7 +341,6 @@ module building() {
 	}
 
 	// add floor
-	floor_thickness = 1;
 	// house floor
 	translate([0,lower_d/2,floor_thickness/2]) {
 		cube([house_width, lower_d, floor_thickness], center=true);
@@ -338,8 +352,45 @@ module building() {
 		cube([door_width, door_thickness, floor_thickness], center=true);
 	}
 }
+
+module rightWallCast() {
+	translate([-(house_width-wall_thickness)/2, (lower_d)/2, house_height/2+floor_thickness/2]) {
+		cube([wall_thickness, lower_d-2*wall_thickness, house_height-floor_thickness], center=true);
+	}
+}
+
+module rightWall(hook_h=0.2, hook_v=0) { // set hook_v to 0.1, hook_h to 0 for diff
+	// copy right wall
+	intersection() {
+		rightWallCast();
+		building();
+	}
+	// bottom ledge
+	translate([-(house_width-wall_thickness)/2, (lower_d)/2, floor_thickness/4+floor_thickness/2-hook_v/2]) {
+		cube([wall_thickness/2-hook_h, lower_d-2*wall_thickness, floor_thickness/2+hook_v],center=true);
+	}
+	// left ear
+	ear_height = 4;
+	translate([-(house_width-wall_thickness)/2, lower_d-wall_thickness+wall_thickness/4, house_height-ear_height/2-hook_v/2]) {
+		cube([wall_thickness/2-hook_h, wall_thickness/2, ear_height+hook_v],center=true);
+	}
+	// right ear
+	translate([-(house_width-wall_thickness)/2, wall_thickness-wall_thickness/4, house_height-ear_height/2-hook_v/2]) {
+		cube([wall_thickness/2-hook_h, wall_thickness/2, ear_height+hook_v],center=true);
+	}
+}
+// print solo: right wall (to be able to access the USB port comfortably)
+// preferably upright print
+//rightWall();
+
+module building_open_wall() {
+	difference() {
+		building();
+		rightWall(0, 0.1);
+	}
+}
 // print solo: lighthouse + house
-building();
+building_open_wall();
 
 module lighthouseRoofTop() {
 	difference() {
@@ -353,6 +404,22 @@ module lighthouseRoofTop() {
 // print solo: lighthouse light cabin (vase mode)
 //lighthouseLightCabin();
 
+module wall_support() {
+	// support for wall added to roof
+	roof_support_height = wall_thickness;
+	roof_support_width = 4;
+	roof_support_thickness = 2*wall_thickness/3;
+	translate([-house_width/2-roof_support_thickness/2-0.2, lower_d/2, house_height-roof_support_height/2]) {
+		difference() {
+			cube([roof_support_thickness,roof_support_width,roof_support_height],center=true);
+			rotate(-atan(roof_support_thickness/roof_support_height), [0,1,0]) {
+			translate([-roof_support_thickness/2,0,0])
+				cube([2,roof_support_width+0.2,roof_support_height*2],center=true);
+			}
+		}
+	}
+}
+
 module roofCap() {
 	difference() {
 		roof();
@@ -365,6 +432,12 @@ module roofCap() {
 			}
 		}
 		lighthouseLower(-0.2);
+	}
+	// add additional support for right wall
+	wall_support();
+	// add additional support for left wall (for the sake of symmetry)
+	mirror([1,0,0]) {
+		wall_support();
 	}
 }
 // print solo: house roof

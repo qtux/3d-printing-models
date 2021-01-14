@@ -7,11 +7,12 @@ led_inner = 23.3;
 led_height = 3.25;
 lower_d = 50;
 wall_thickness = 2;
-lower_part_height = 95;
+lower_part_height = 120;
 light_part_height = 20;
-light_part_d = led_outer+0.2+wall_thickness;
+light_part_d = led_outer+4+wall_thickness*2; // increased by 4 mm to fit
 
-ridge_height = 5;
+ridge_height = 4;
+tolerance = 0.8; // for sliding things into one another (0.4 is very tight, 0.6 is tight)
 
 hole_size = 5;
 lcd_inner_height = 31.4;
@@ -25,14 +26,15 @@ display_vertical_shift = 3;
 
 house_width = lcd_width+10+wall_thickness*2;
 house_height = lcd_outer_height+ridge_height+1+ridge_height;
+house_depth = lower_d*1.5;
 
-house_roof_height = 12;
+house_roof_height = 17;
 
 floor_thickness = 1;
 
 module lighthouseLight(wall=0) {
 	translate([0,0,lower_part_height+light_part_height/2]) {
-		cylinder(d=light_part_d-wall_thickness/2-0.2-wall, h=light_part_height+ridge_height, $fn=600, center=true);
+		cylinder(d=light_part_d-wall_thickness/2-0.2-wall, h=light_part_height+ridge_height*2, $fn=600, center=true);
 	}
 }
 
@@ -57,34 +59,34 @@ module lighthouseRoof() {
 module house(wall=0) {
 	difference() {
 		// house
-		translate([0, lower_d/2, house_height/2]) {
+		translate([0, house_depth/2, house_height/2]) {
 			rotate(90, [1,0,0]) {
-				cube([house_width-wall*2, house_height, lower_d-wall*2], center=true);
+				cube([house_width-wall*2, house_height, house_depth-wall*2], center=true);
 			}
 		}
-		// window
-		translate([0, lower_d, house_height/2-display_vertical_shift]) {
+		// display window
+		translate([tolerance, house_depth, house_height/2-display_vertical_shift]) {
 			rotate(90, [1,0,0]) {
-				cube([display_width, display_height, wall_thickness*4], center=true);
+				cube([display_width+tolerance, display_height, wall_thickness*4], center=true);
 			}
 		}
 	}
 }
 
 module roof() {
-	translate([0, lower_d/2, house_height+house_roof_height/2]) {
-		for (x = [-8-wall_thickness*2 : 0.1 : 8+wall_thickness*2]) {
-			translate([x, 0, 0]) {
-				rotate(45, [0,0,1]) {
-					cylinder(r1=lcd_width/2+8, r2=0, h=house_roof_height, $fn=4, center=true);
+	translate([0, house_depth/2, house_height+house_roof_height/2]) {
+		//for (x = [-8-wall_thickness*2 : 0.1 : 8+wall_thickness*2]) {
+		//	translate([x, 0, 0]) {
+				rotate(90+45, [0,0,1]) {
+					cylinder(r1=house_depth*0.75, r2=0, h=house_roof_height, $fn=4, center=true);
 				}
-			}
-		}
+			//}
+		//}
 	}
 }
 
 
-module lighthouseLightCabin(thickness=0.2) {
+module lighthouseLightCabin(thickness=0.4) {
 	difference() {
 		lighthouseLight();
 		lighthouseLight(thickness);
@@ -94,76 +96,70 @@ module lighthouseLightCabin(thickness=0.2) {
 module lighthouseHouse(wall=0) {
 	difference() {
 		lighthouseLower(wall);
-		lighthouseLightCabin(0.4);
+		lighthouseLightCabin(0.4+tolerance);
 	}
 	house(wall);
 }
 
-support_depth = lcd_thickness+0.4;
-hook_width_height = 5;
-hook_hole_depth = 2;
-hook_height = (house_height-lcd_outer_height-hook_width_height-0.2)/2;
 
-// for size comparison
-module display_controller() {
-	cube([lcd_width,lcd_thickness,lcd_inner_height],center=true);
-	translate([lcd_width/2-hook_width_height/2, lcd_thickness/2-hook_hole_depth/2, lcd_inner_height/2+hook_width_height/2]) {
-		cube([hook_width_height,hook_hole_depth,hook_width_height],center=true);
+display_depth = 3;
+hook_hole_depth = display_depth+2*tolerance;
+
+module display_controller(lcd_height, support_height) {
+	lcd_thickness = lcd_thickness+tolerance;
+	// add tolerance above and below display, as well as behind ears
+	// display
+	cube([lcd_width+tolerance,lcd_thickness,lcd_height],center=true);
+	// ears
+	// upper right
+	translate([lcd_width/2-hole_size/2, lcd_thickness/2-hook_hole_depth/2, lcd_height/2+hole_size/2]) {
+		cube([hole_size+tolerance,hook_hole_depth,hole_size],center=true);
 	}
-	translate([lcd_width/2-hook_width_height/2, lcd_thickness/2-hook_hole_depth/2, -lcd_inner_height/2-hook_width_height/2]) {
-		cube([hook_width_height,hook_hole_depth,hook_width_height],center=true);
+	// lower right
+	translate([lcd_width/2-hole_size/2, lcd_thickness/2-hook_hole_depth/2, -lcd_height/2-hole_size/2]) {
+		cube([hole_size+tolerance,hook_hole_depth,hole_size],center=true);
 	}
-	translate([-lcd_width/2+hook_width_height/2, lcd_thickness/2-hook_hole_depth/2, lcd_inner_height/2+hook_width_height/2]) {
-		cube([hook_width_height,hook_hole_depth,hook_width_height],center=true);
+	// upper left
+	translate([-lcd_width/2+hole_size/2, lcd_thickness/2-hook_hole_depth/2, lcd_height/2+hole_size/2]) {
+		cube([hole_size,hook_hole_depth,hole_size],center=true);
 	}
-	translate([-lcd_width/2+hook_width_height/2, lcd_thickness/2-hook_hole_depth/2, -lcd_inner_height/2-hook_width_height/2]) {
-		cube([hook_width_height,hook_hole_depth,hook_width_height],center=true);
+	// lower left
+	translate([-lcd_width/2+hole_size/2, lcd_thickness/2-hook_hole_depth/2, -lcd_height/2-hole_size/2]) {
+		cube([hole_size,hook_hole_depth,hole_size],center=true);
+	}
+	// slide channels for inserting the display
+	// upper
+	translate([0, 0, lcd_height/2+(support_height*0.75)/2]) {
+		cube([lcd_width-2*hole_size,lcd_thickness,support_height*0.75],center=true);
+	}
+	// lower
+	translate([0, 0, -lcd_height/2-hole_size/2]) {
+		cube([lcd_width-2*hole_size,lcd_thickness,hole_size],center=true);
 	}
 }
 
-module display_hooks() {
-	// upper left hook rest
-	translate([lcd_width/2-hook_width_height/2,0,lcd_outer_height/2+hook_height/2]) {
-		cube([hook_width_height,support_depth,hook_height], center=true);
-	}
-	// lower left hook rest
-	translate([lcd_width/2-hook_width_height/2,0,-lcd_outer_height/2-hook_height/2]) {
-		cube([hook_width_height,support_depth,hook_height], center=true);
-	}
-	// upper right hook rest
-	translate([-lcd_width/2+hook_width_height/2,0,lcd_outer_height/2+hook_height/2]) {
-		cube([hook_width_height,support_depth,hook_height], center=true);
-	}
-	// lower right hook rest
-	translate([-lcd_width/2+hook_width_height/2,0,-lcd_outer_height/2-hook_height/2]) {
-		cube([hook_width_height,support_depth,hook_height], center=true);
-	}
-
-	// upper left hook
-	translate([lcd_width/2-hook_width_height/2, -support_depth/2+(support_depth-hook_hole_depth)/2, lcd_inner_height/2+(hook_width_height+hook_height)/2]) {
-		cube([hook_width_height,support_depth-hook_hole_depth,hook_width_height+hook_height], center=true);
-	}
-	// lower left hook
-	translate([lcd_width/2-hook_width_height/2, -support_depth/2+(support_depth-hook_hole_depth)/2, -lcd_inner_height/2-(hook_width_height+hook_height)/2]) {
-		cube([hook_width_height,support_depth-hook_hole_depth,hook_width_height+hook_height], center=true);
-	}
-	// upper right hook
-	translate([-lcd_width/2+hook_width_height/2, -support_depth/2+(support_depth-hook_hole_depth)/2, lcd_inner_height/2+(hook_width_height+hook_height)/2]) {
-		cube([hook_width_height,support_depth-hook_hole_depth,hook_width_height+hook_height], center=true);
-	}
-	// lower right hook
-	translate([-lcd_width/2+hook_width_height/2, -support_depth/2+(support_depth-hook_hole_depth)/2, -lcd_inner_height/2-(hook_width_height+hook_height)/2]) {
-		cube([hook_width_height,support_depth-hook_hole_depth,hook_width_height+hook_height], center=true);
-	}
-
-	// left pillar
-	translate([lcd_width/2,-support_depth/2,-(house_height-0.2-ridge_height)/2]) {
-		cube([(house_width-lcd_width)/2,support_depth,house_height-0.2-ridge_height]);
-	}
-
-	//lower ledge
-	translate([0,0,-lcd_outer_height/2-hook_height/2]) {
-		cube([house_width,support_depth,hook_height], center=true);
+module display_controller_mount() {
+	lcd_height = lcd_inner_height+tolerance/2;
+	support_depth = lcd_thickness+tolerance;
+	support_height = house_height-ridge_height-tolerance-lcd_height;
+	translate([0,-support_depth/2+tolerance,0]) {
+		difference() {
+			// cube cast
+			translate([(house_width-lcd_width)/4,-tolerance/2,ridge_height/2]) {
+				cube([house_width-(house_width-lcd_width)/2,support_depth-tolerance,support_height+lcd_height], center=true);
+			}
+			display_controller(lcd_height, support_height);
+		}
+		// ledge below controller
+		ledge_depth = 20-support_depth;
+		translate([wall_thickness+tolerance/4, -support_depth/2-ledge_depth/2,-lcd_height/2-hole_size/2]) {
+			cube([house_width-wall_thickness*2-tolerance/2,ledge_depth,hole_size], center=true);
+		}
+		// ledge below display and controller
+		total_ledge_depth = ledge_depth+support_depth;
+		translate([wall_thickness+tolerance/4, -total_ledge_depth/2+support_depth/2,-lcd_height/2-support_height/4-hole_size/2+tolerance/4]) {
+			cube([house_width-wall_thickness*2-tolerance/2,total_ledge_depth,support_height/2-hole_size], center=true);
+		}
 	}
 }
 
@@ -251,7 +247,7 @@ module opening(frame, thickness, width, height, angle, offset_h, offset_wh) {
 	}
 }
 
-module door(frame=0, thickness=door_thickness, width=door_width, height=door_height, angle=0, offset_h=0, offset_wh=door_width) {
+module door(frame=0, thickness=door_thickness, width=door_width, height=door_height, angle=0, offset_h=0, offset_wh=door_width-tolerance/2) {
 	/*difference() {
 		opening(frame, thickness, width, height, angle, offset_h, offset_wh);
 		intersection() {
@@ -270,8 +266,8 @@ window_height = house_height*0.2;
 
 module house_windows(side=1) {
 	house_window_height = window_height*1.8;
-	translate([house_width/2*side,lower_d/3,window_height*1.5+(house_window_height-window_height)/2]) {
-		cube([window_thickness, window_width, house_window_height], center=true);
+	translate([house_width/2*side,house_depth/3,window_height*1.5+(house_window_height-window_height)/2]) {
+		cube([window_thickness, window_width*1.2, house_window_height], center=true);
 		/*translate([0,0,house_window_height/2]) {
 			rotate(90, [0,1,0]) {
 				cylinder(d=window_width, h=window_thickness, $fn=100, center=true);
@@ -283,7 +279,12 @@ module house_windows(side=1) {
 module windows() {
 	door(0, window_thickness, window_width, window_height, 55, window_height, window_height);
 	door(0, window_thickness, window_width, window_height, -55, window_height, window_height);
-	door(0, window_thickness, window_width, window_height, 0, lower_part_height*0.6, window_height);
+	door(0, window_thickness, window_width, window_height, 0, lower_part_height*0.5, window_height);
+	door(0, window_thickness, window_width, window_height, 180, lower_part_height*0.77, window_height);
+	/*door(0, window_thickness, window_width, window_height, 0, lower_part_height*0.4, window_height);
+	door(0, window_thickness, window_width, window_height, 90, lower_part_height*0.5, window_height);
+	door(0, window_thickness, window_width, window_height, 180, lower_part_height*0.6, window_height);
+	door(0, window_thickness, window_width, window_height, -90, lower_part_height*0.75, window_height);*/
 	house_windows();
 	house_windows(-1);
 }
@@ -291,11 +292,11 @@ module windows() {
 module usbSlot() {
 	height = 12;
 	width = 7;
-	translate([-house_width/2, lower_d-12-width/2-wall_thickness/2, house_height/2-display_vertical_shift]) {
+	translate([-house_width/2, house_depth-12-width/2-wall_thickness/2, house_height/2-display_vertical_shift]) {
 		cube([wall_thickness*2, width+wall_thickness, height+0.4], center=true);
 	}
 	// for position comparison
-	//translate([-house_width/2, lower_d-12/2, 17/2]) #cube([1,12,17], center=true);
+	//translate([-house_width/2, house_depth-12/2, 17/2]) #cube([1,12,17], center=true);
 }
 
 module buildingComplex() {
@@ -303,14 +304,8 @@ module buildingComplex() {
 		lighthouseHouse();
 		lighthouseHouse(wall_thickness);
 	}
-	translate([0, lower_d-support_depth/2-wall_thickness, house_height/2+0.4-display_vertical_shift]) {
-	//translate([0,0,-40]) {
-		display_hooks();
-		//#display_controller();
-	}
-	//ledge below house
-	translate([0, lower_d-support_depth-wall_thickness-(20-support_depth)/2, (hook_width_height+hook_height)/2]) {
-		cube([house_width,20-support_depth,hook_width_height+hook_height], center=true);
+	translate([0, house_depth-wall_thickness, house_height/2+tolerance/2-display_vertical_shift]) {
+		display_controller_mount();
 	}
 	led_rest();
 }
@@ -342,8 +337,8 @@ module building() {
 
 	// add floor
 	// house floor
-	translate([0,lower_d/2,floor_thickness/2]) {
-		cube([house_width, lower_d, floor_thickness], center=true);
+	translate([0,house_depth/2,floor_thickness/2]) {
+		cube([house_width, house_depth, floor_thickness], center=true);
 	}
 	// lighthouse floor
 	cylinder(d=lower_d-wall_thickness/2, h=floor_thickness, $fn=600);
@@ -354,29 +349,32 @@ module building() {
 }
 
 module rightWallCast() {
-	translate([-(house_width-wall_thickness)/2, (lower_d)/2, house_height/2+floor_thickness/2]) {
-		cube([wall_thickness, lower_d-2*wall_thickness, house_height-floor_thickness], center=true);
+	translate([-(house_width-wall_thickness)/2, (house_depth)/2, house_height/2+floor_thickness/2]) {
+		cube([wall_thickness, house_depth-2*wall_thickness, house_height-floor_thickness], center=true);
 	}
 }
 
-module rightWall(hook_h=0.2, hook_v=0) { // set hook_v to 0.1, hook_h to 0 for diff
+module rightWall(outer_tolerance=0) {
 	// copy right wall
-	intersection() {
-		rightWallCast();
-		building();
+	difference() {
+		difference() {
+			rightWallCast();
+			windows();
+		}
+		usbSlot();
 	}
 	// bottom ledge
-	translate([-(house_width-wall_thickness)/2, (lower_d)/2, floor_thickness/4+floor_thickness/2-hook_v/2]) {
-		cube([wall_thickness/2-hook_h, lower_d-2*wall_thickness, floor_thickness/2+hook_v],center=true);
+	translate([-(house_width)/2+wall_thickness-tolerance/4*2, (house_depth)/2, floor_thickness/4+floor_thickness/2]) {
+		cube([wall_thickness/2-tolerance/4+outer_tolerance, house_depth-2*wall_thickness, floor_thickness/2+outer_tolerance],center=true);
 	}
 	// left ear
-	ear_height = 4;
-	translate([-(house_width-wall_thickness)/2, lower_d-wall_thickness+wall_thickness/4, house_height-ear_height/2-hook_v/2]) {
-		cube([wall_thickness/2-hook_h, wall_thickness/2, ear_height+hook_v],center=true);
+	ear_height = house_height-floor_thickness/2;
+	translate([-(house_width)/2+wall_thickness-tolerance/4*2, house_depth-wall_thickness+wall_thickness/4, house_height-ear_height/2]) {
+		cube([wall_thickness/2-tolerance/4+outer_tolerance, wall_thickness/2, ear_height+outer_tolerance],center=true);
 	}
 	// right ear
-	translate([-(house_width-wall_thickness)/2, wall_thickness-wall_thickness/4, house_height-ear_height/2-hook_v/2]) {
-		cube([wall_thickness/2-hook_h, wall_thickness/2, ear_height+hook_v],center=true);
+	translate([-(house_width)/2+wall_thickness-tolerance/4*2, wall_thickness-wall_thickness/4, house_height-ear_height/2]) {
+		cube([wall_thickness/2-tolerance/4+outer_tolerance, wall_thickness/2, ear_height+outer_tolerance],center=true);
 	}
 }
 // print solo: right wall (to be able to access the USB port comfortably)
@@ -386,16 +384,19 @@ module rightWall(hook_h=0.2, hook_v=0) { // set hook_v to 0.1, hook_h to 0 for d
 module building_open_wall() {
 	difference() {
 		building();
-		rightWall(0, 0.1);
+		rightWall(tolerance/2);
 	}
 }
 // print solo: lighthouse + house
-building_open_wall();
+//building_open_wall();
+
+/*translate([0,0,lower_part_height])
+#sphere(r=led_outer/2, $fn=200);*/
 
 module lighthouseRoofTop() {
 	difference() {
 		lighthouseRoof();
-		lighthouseLightCabin(0.4);
+		lighthouseLightCabin(0.4+tolerance);
 	}
 }
 // print solo: lighthouse roof
@@ -409,7 +410,7 @@ module wall_support() {
 	roof_support_height = wall_thickness;
 	roof_support_width = 4;
 	roof_support_thickness = 2*wall_thickness/3;
-	translate([-house_width/2-roof_support_thickness/2-0.2, lower_d/2, house_height-roof_support_height/2]) {
+	translate([-house_width/2-roof_support_thickness/2-tolerance/2, house_depth/2, house_height-roof_support_height/2]) {
 		difference() {
 			cube([roof_support_thickness,roof_support_width,roof_support_height],center=true);
 			rotate(-atan(roof_support_thickness/roof_support_height), [0,1,0]) {
@@ -423,15 +424,15 @@ module wall_support() {
 module roofCap() {
 	difference() {
 		roof();
-		lighthouseLower(-0.2);
+		lighthouseLower(-tolerance);
 	}
 	difference() {
-		translate([0, lower_d/2, house_height-ridge_height/2]) {
+		translate([0, house_depth/2, house_height-ridge_height/2]) {
 			rotate(90, [1,0,0]) {
-				cube([house_width-wall_thickness*2-0.2, ridge_height, lower_d-wall_thickness-0.2], center=true);
+				cube([house_width-wall_thickness*2-tolerance, ridge_height, house_depth-wall_thickness*2-tolerance], center=true);
 			}
 		}
-		lighthouseLower(-0.2);
+		lighthouseLower(-tolerance);
 	}
 	// add additional support for right wall
 	wall_support();
@@ -441,4 +442,48 @@ module roofCap() {
 	}
 }
 // print solo: house roof
-//roofCap();
+roofCap();
+
+inner_hole_size = 2;
+pin_thickness = 1.5;
+frame_thickness = hook_hole_depth - display_depth - 0.2;
+frame_arms = 5;
+cover_height = lcd_inner_height-3*2;
+cover_width = 50;
+cover_offset_right = 3;
+cover_thickness = 0.4; // print 0.2 mm
+
+new_lcd_outer_height = lcd_outer_height-0.4;
+
+module pin() {
+	translate([lcd_width/2-frame_arms/2, frame_thickness/2+pin_thickness/2, new_lcd_outer_height/2-frame_arms/2])
+		rotate(90, [1,0,0])
+			cylinder(d=inner_hole_size,h=pin_thickness,$fn=200,center=true);
+}
+
+module display_frame() {
+	translate([0,frame_thickness/2,0]) {
+		difference() {
+			cube([lcd_width, frame_thickness, new_lcd_outer_height], center=true);
+			cube([lcd_width, frame_thickness+0.1, new_lcd_outer_height-2*frame_arms], center=true);
+		}
+		#pin();
+		mirror([1,0,0]) pin();
+		mirror([0,0,1]) pin();
+		mirror([1,0,0]) mirror([0,0,1]) pin();
+	}
+
+	// support pillar
+	pillar_width = (house_width-wall_thickness*2-lcd_width)/2-tolerance;
+	translate([lcd_width/2+pillar_width/2,hole_size/2, 0])
+		cube([pillar_width, hole_size, new_lcd_outer_height], center=true);
+
+	difference() {
+		translate([-lcd_width/2,0,-lcd_inner_height/2])
+			cube([lcd_width, cover_thickness, lcd_inner_height]);
+		translate([lcd_width/2-cover_width-cover_offset_right,0,-cover_height/2])
+			cube([cover_width, cover_thickness, cover_height]);
+	}
+}
+// print solo: display frame
+//display_frame();

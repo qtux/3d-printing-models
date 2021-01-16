@@ -8,7 +8,7 @@ led_height = 3.25;
 lower_d = 50;
 wall_thickness = 2;
 lower_part_height = 120;
-light_part_height = 20;
+light_part_height = 18;
 light_part_d = led_outer+4+wall_thickness*2; // increased by 4 mm to fit
 
 ridge_height = 4;
@@ -28,9 +28,10 @@ house_width = lcd_width+10+wall_thickness*2;
 house_height = lcd_outer_height+ridge_height+1+ridge_height;
 house_depth = lower_d*1.5;
 
-house_roof_height = 17;
+house_roof_height = 19;
 
 floor_thickness = 1;
+outer_walkway = light_part_d/2+light_part_d/8;
 
 module lighthouseLight(wall=0) {
 	translate([0,0,lower_part_height+light_part_height/2]) {
@@ -47,7 +48,7 @@ module lighthouseLower(wall=0) {
 module lighthouseRoof() {
 	difference() {
 		translate([0,0,lower_part_height+light_part_height]) {
-			sphere(r=(light_part_d+wall_thickness)/2, $fn=200);
+			sphere(r=light_part_d/2+light_part_d/16, $fn=200);
 		}
 		translate([0,0,lower_part_height+light_part_height-(light_part_d+wall_thickness)/2]) {
 			cube([led_outer*2, led_outer*2, (light_part_d+wall_thickness)], center=true);
@@ -388,7 +389,7 @@ module building_open_wall() {
 	}
 }
 // print solo: lighthouse + house
-//building_open_wall();
+building_open_wall();
 
 /*translate([0,0,lower_part_height])
 #sphere(r=led_outer/2, $fn=200);*/
@@ -399,10 +400,10 @@ module lighthouseRoofTop() {
 		lighthouseLightCabin(0.4+tolerance);
 	}
 }
-// print solo: lighthouse roof
+// print solo: lighthouse roof (alternative below)
 //lighthouseRoofTop();
 
-// print solo: lighthouse light cabin (vase mode)
+// print solo: lighthouse light cabin (vase mode, 3 mm smaller on z axis)
 //lighthouseLightCabin();
 
 module wall_support() {
@@ -442,7 +443,7 @@ module roofCap() {
 	}
 }
 // print solo: house roof
-roofCap();
+//roofCap();
 
 inner_hole_size = 2;
 pin_thickness = 1.5;
@@ -487,3 +488,43 @@ module display_frame() {
 }
 // print solo: display frame
 //display_frame();
+
+module walkway() {
+	railing_height = light_part_d/8;
+	//difference() {
+		// floor
+		difference() {
+			translate([0,0,lower_part_height])
+			cylinder(r=outer_walkway,h=wall_thickness,$fn=600,center=true);
+			translate([0,0,lower_part_height])
+			cylinder(r=light_part_d/2-wall_thickness,h=wall_thickness+1,$fn=600,center=true);
+		}
+		//building_open_wall();
+	//}
+	// railing
+	for (a = [0 : 30 : 360]) {
+		rotate(a, [0,0,1])
+			translate([0,-outer_walkway+wall_thickness/2,lower_part_height+wall_thickness*2-0.2])
+				cube([wall_thickness, wall_thickness, railing_height],center=true);
+	}
+	difference() {
+		translate([0,0,lower_part_height+wall_thickness+railing_height])
+			cylinder(r=outer_walkway,h=wall_thickness,$fn=600,center=true);
+		translate([0,0,lower_part_height+wall_thickness+railing_height])
+			cylinder(r=outer_walkway-wall_thickness,h=wall_thickness+1,$fn=600,center=true);
+	}
+	// pillars
+	pillar_height = light_part_height+wall_thickness;
+	for (a = [0 : 60 : 360]) {
+		rotate(a, [0,0,1])
+			translate([0,light_part_d/2-wall_thickness+(wall_thickness)/2,lower_part_height+pillar_height/2-wall_thickness/2])
+				cube([wall_thickness, wall_thickness*1.5, pillar_height],center=true);
+	}
+}
+
+// print solo: alternative roof for lighthouse with walkway
+/*lighthouseRoofTop();
+difference(){
+	walkway();
+	lighthouseLightCabin(1.2);
+}*/

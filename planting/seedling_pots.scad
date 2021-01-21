@@ -78,7 +78,7 @@ module tamper(h, d, thickness, tolerance=1, r=2) {
 }
 
 // single grid module
-module grid_module(h, d, thickness, pot_d, pot_thickness, socket_d, socket_tolerance, margin=2) {
+module grid_module(h, d, thickness, pot_d, pot_thickness, socket_d, socket_tolerance, margin=2, full_holes=true) {
 	difference() {
 		cube([d, d, h], center=true);
 		
@@ -102,24 +102,29 @@ module grid_module(h, d, thickness, pot_d, pot_thickness, socket_d, socket_toler
 		}
 		
 		// put holes into the sides to save material and for air circulation
-		ratio = ceil((d - 2 * socket_d) / (h - margin));
-		w = (d - 2 * socket_d - (ratio - 1) * margin) / ratio;
-		for (phi = [0, 90], i = [0:ratio - 1]) {
-			delta = i * (w + margin) - d/2 + w/2 + socket_d;
-			rotate([90, 0, phi]) translate([delta, 0, 0])
-			linear_extrude(1.1 * d, center=true) {
-				translate([-w/2, -w/2]) polygon([
-					[0, 0],
-					[w - margin/sqrt(2), 0],
-					[0, w - margin/sqrt(2)]
-				]);
-				translate([w/2, w/2]) polygon([
-					[0, 0],
-					[-w + margin/sqrt(2), 0],
-					[0, -w + margin/sqrt(2)]
-				]);
-			}
-		}
+        if (full_holes) {
+            cube([d, d - 2 * socket_d, h - 2 * thickness], center=true);
+            cube([d - 2 * socket_d, d, h - 2 * thickness], center=true);
+        } else {
+            ratio = ceil((d - 2 * socket_d) / (h - margin));
+            w = (d - 2 * socket_d - (ratio - 1) * margin) / ratio;
+            for (phi = [0, 90], i = [0:ratio - 1]) {
+                delta = i * (w + margin) - d/2 + w/2 + socket_d;
+                rotate([90, 0, phi]) translate([delta, 0, 0])
+                linear_extrude(1.1 * d, center=true) {
+                    translate([-w/2, -w/2]) polygon([
+                        [0, 0],
+                        [w - margin/sqrt(2), 0],
+                        [0, w - margin/sqrt(2)]
+                    ]);
+                    translate([w/2, w/2]) polygon([
+                        [0, 0],
+                        [-w + margin/sqrt(2), 0],
+                        [0, -w + margin/sqrt(2)]
+                    ]);
+                }
+            }
+        }
 	}
 }
 

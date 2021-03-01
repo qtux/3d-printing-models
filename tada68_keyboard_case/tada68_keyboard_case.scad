@@ -119,31 +119,9 @@ module outer_box(width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w =
     }
 }
 
-module connector(r1=10, r2=5, h=40) {
-    translate([h/2, r1, 0]) difference() {
-        hull () {
-            translate([-h/2, 0, 0]) sphere(r=r2);
-            sphere(r=r1);
-            translate([ h/2, 0, 0]) sphere(r=r2);
-        }
-        translate([-h/2 - r2, -r1, -r1]) cube([h + 2 * r2, 2 * r1, r1]);
-    }
-}
-
 module split_box(left=true, width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
-
-    // bridge connector settings
-    bridge_r = min(wall_d, stand_h - 2); // 2 mm clearance
-    bridge_w = 30;
-
     difference() {
-        union() {
-            outer_box(width, depth, height, r_outer, r_inner, wall_w, wall_d, wall_h, stand_h);
-            for (pos = [depth - 2 * bridge_r, 0, (depth - 2 * bridge_r) / 2]) {
-                translate([(width - bridge_w) / 2, pos, wall_h])
-                connector(r1=bridge_r, r2=bridge_r / sqrt(2), h=bridge_w);
-            }
-        }
+        outer_box(width, depth, height, r_outer, r_inner, wall_w, wall_d, wall_h, stand_h);
         translate([left ? width/2 : 0,0,0]) cube([width/2, depth, height]);
     }
 }

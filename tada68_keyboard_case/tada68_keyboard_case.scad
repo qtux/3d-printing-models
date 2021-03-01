@@ -37,6 +37,23 @@ module pill(h, r, s=0.2) {
     translate([0,0,h-r*s]) scale([1,1,s]) sphere(r=r);
 }
 
+module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
+    // ensure that screw fits into stand
+    assert(screw_h <= stand_h);
+    assert(screw_d + 1 <= stand_r * 2);
+    difference() {
+        cylinder(h=stand_h, r=stand_r);
+        translate([0, 0, stand_h - screw_h])
+        metric_thread(
+            diameter=screw_d,
+            pitch=0.5,             // 3.5 mm travel per 7 turns
+            length=screw_h + 0.5,  // real screw height + 0.5 mm offset
+            internal=true,
+            test=$preview          // don't show threads in preview
+        );
+    }
+}
+
 module outer_box(width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
     // outer dimensions
     w_outer = width - r_outer;
@@ -68,12 +85,6 @@ module outer_box(width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w =
     }
 
     // threaded stands
-    stand_r = 2.5;
-    screw_h = 3.5 + 0.5; // real screw height + 0.5 mm offset
-    screw_d = 2;
-    // ensure that screw fits into stand
-    assert(screw_h <= stand_h);
-    assert(screw_d + 1 <= stand_r * 2);
     for (rel_stand_pos = [
         [24.85,  9.475,  0], // left-bottom
         [24.85,  66.725, 0], // left-top
@@ -83,16 +94,7 @@ module outer_box(width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w =
         [266.55, 9.575,  0], // right-bottom
     ]) {
         translate([wall_w, wall_d, wall_h] + rel_stand_pos)
-        difference() {
-            cylinder(h=stand_h, r=stand_r);
-            translate([0, 0, stand_h - screw_h])
-            metric_thread(
-                diameter=screw_d,
-                pitch=0.5, // 3.5 mm travel per 7 turns
-                length=screw_h,
-                internal=true
-            );
-        }
+        threaded_stand(stand_h);
     }
 
     // outer stands

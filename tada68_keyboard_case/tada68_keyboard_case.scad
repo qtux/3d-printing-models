@@ -156,10 +156,20 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false) {
 }
 
 module split_box(left=true, width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
+
+    tail_depth = 6;
+    tail_offset = 20;
+    tol = 0.4;
+
     difference() {
         outer_box(width, depth, height, r_outer, r_inner, wall_w, wall_d, wall_h, stand_h);
         translate([left ? width / 2 : -width / 2, 0, 0]) cube([width, depth, height]);
+        translate([width/2 - tol/2, 0, -height]) cube([tol, depth, 3*height]);
+        translate([width/2 + tail_depth / 2, tail_offset / 2, -wall_h]) rotate([0,0,90])
+        dove_tail_array([depth - tail_offset, tail_depth, 3*wall_h], count=5, invert=left, tol=-tol);
     }
+    translate([width/2 + tail_depth/2, 10,0]) rotate([0,0,90])
+    dove_tail_array([depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol);
 }
 
 $fn = 100;

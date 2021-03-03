@@ -26,7 +26,7 @@ module pyramid(b_width, t_width, b_depth, t_depth, height) {
 
 module cutout(b_width, t_width, b_depth, t_depth, b_height, t_height) {
     union() {
-        translate([0,0,b_height]) cube([t_width,t_depth,t_height]);
+        cube([t_width,t_depth,t_height+b_height]);
         translate([t_width/2, t_depth/2, 0]) pyramid(b_width, t_width, b_depth, t_depth, b_height);
     }
 }
@@ -158,7 +158,7 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false) {
 module split_box(left=true, width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
     difference() {
         outer_box(width, depth, height, r_outer, r_inner, wall_w, wall_d, wall_h, stand_h);
-        translate([left ? width/2 : 0,0,0]) cube([width/2, depth, height]);
+        translate([left ? width / 2 : -width / 2, 0, 0]) cube([width, depth, height]);
     }
 }
 

@@ -54,7 +54,11 @@ module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
     }
 }
 
-module outer_box(width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
+module outer_box(width=311, depth=101, height=14,  wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
+    // TODO determine r_outer and r_inner depending on width, depth and wall thickness
+    r_outer=6;
+    r_inner=3;
+
     // outer dimensions
     w_outer = width - r_outer;
     d_outer = depth - r_outer;
@@ -155,14 +159,14 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false) {
     }
 }
 
-module split_box(left=true, width=311, depth=101, height=14, r_outer=6, r_inner=3, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
+module split_box(left=true, width=311, depth=101, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
 
     tail_depth = 6;
     tail_offset = 20;
     tol = 0.4;
 
     difference() {
-        outer_box(width, depth, height, r_outer, r_inner, wall_w, wall_d, wall_h, stand_h);
+        outer_box(width, depth, height, wall_w, wall_d, wall_h, stand_h);
         translate([left ? width / 2 : -width / 2, 0, 0]) cube([width, depth, height]);
         translate([width/2 - tol/2, 0, -height]) cube([tol, depth, 3*height]);
         translate([width/2 + tail_depth / 2, tail_offset / 2, -wall_h]) rotate([0,0,90])

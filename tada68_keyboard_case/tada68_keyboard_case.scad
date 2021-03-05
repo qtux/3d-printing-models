@@ -58,10 +58,12 @@ module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
     }
 }
 
-module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
+module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
     // TODO determine r_outer and r_inner depending on width, depth and wall thickness
     r_outer=6;
     r_inner=3;
+
+    stand_h = 4.5;
 
     // outer dimensions
     w_outer = pcb_width + 2*wall_w - r_outer;
@@ -104,11 +106,9 @@ module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
         [266.55, 9.575,  0], // right-bottom
     ]) {
         translate([wall_w, wall_d, wall_h] + rel_stand_pos)
-        threaded_stand(stand_h);
+        threaded_stand(stand_h + 0.5); // TODO fix this offset, seems to be too large
     }
 
-    // outer stands
-    outer_stand_h = stand_h - 0.5; // TODO why?
     // outer stands horizontal
     for (rel_outer_stand_pos_h = [
         [pcb_width * 0.25, 0, 0],
@@ -117,7 +117,7 @@ module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
         [pcb_width * 0.75, pcb_depth, 0],
     ]) {
         translate([wall_w, wall_d, wall_h] + rel_outer_stand_pos_h)
-        cylinder(h=outer_stand_h, r=wall_d);
+        cylinder(h=stand_h, r=wall_d);
     }
     // outer stands vertical
     for (rel_outer_stand_pos_v = [
@@ -125,7 +125,7 @@ module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
         [pcb_width, pcb_depth / 2, 0],
     ]) {
         translate([wall_w, wall_d, wall_h] + rel_outer_stand_pos_v)
-        cylinder(h=outer_stand_h, r=wall_w);
+        cylinder(h=stand_h, r=wall_w);
     }
 }
 
@@ -165,7 +165,7 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false) {
     }
 }
 
-module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
+module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
 
     tail_depth = 6;
     tail_offset = 20;
@@ -175,7 +175,7 @@ module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, s
     depth = pcb_depth + 2 * wall_d;
 
     difference() {
-        outer_box(height, wall_w, wall_d, wall_h, stand_h);
+        outer_box(height, wall_w, wall_d, wall_h);
         translate([left ? width / 2 : -width / 2, 0, 0]) cube([width, depth, height]);
         translate([width/2 - tol/2, 0, -height]) cube([tol, depth, 3*height]);
         translate([width/2 + tail_depth / 2, tail_offset / 2, -wall_h]) rotate([0,0,90])

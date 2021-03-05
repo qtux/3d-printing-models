@@ -87,8 +87,8 @@ module outer_box(height=14, wall_w=2, wall_h=3.1) {
             translate([r_inner, d_inner, 0]) cylinder(h=height, r=r_inner);
         }
         // reset button cutout
-        translate([wall_w + 29.9, wall_w + 48.125, 0])
-        cutout(20, 15, 20, 15, wall_h, height);
+        translate([wall_w + 22, wall_w + pcb_depth/2 - 7.5, 0])
+        cutout(20, 15, 20, 15, wall_h, 1);
         // USB cutout
         translate([wall_w + 14.05, 2 * wall_w + pcb_depth, wall_h + stand_h - 4])
         rotate([90,0,0]) cutout(9.5, 8, 5.5, 4, wall_w/4, wall_w);
@@ -104,7 +104,7 @@ module outer_box(height=14, wall_w=2, wall_h=3.1) {
         [266.55, 9.575,  0], // right-bottom
     ]) {
         translate([wall_w, wall_w, wall_h] + rel_stand_pos)
-        threaded_stand(stand_h + 0.5); // TODO fix this offset, seems to be too large
+        threaded_stand(stand_h + 0.05);
     }
 
     // outer stands horizontal
@@ -176,11 +176,11 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false, lock_hole_
     }
 }
 
-module split_box(left=true, height=14, wall_w=2, wall_h=3.1) {
+module split_box(left=true, height=14, wall_w=2, wall_h=2) {
 
     tail_depth = 6;
     tail_offset = 20;
-    tol = 0.4;
+    tol = 0.04;
     lock_hole_d = 1.75 + 0.55; // PLA strand thickness + radial tolerance
     lock_hole_rim = 0.7;
 

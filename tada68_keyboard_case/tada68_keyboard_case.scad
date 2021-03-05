@@ -23,6 +23,8 @@ use <threads.scad>
 // TADA68 dimensions
 pcb_width = 304.8;
 pcb_depth = 95.25;
+pcb_clearance = 2; // required space below PCB (aside from the USB connector)
+stand_h = 5;
 
 module pyramid(b_width, t_width, b_depth, t_depth, height) {
     linear_extrude(height=height, scale=[t_width/b_width, t_depth/b_depth]) square([b_width, b_depth], center=true);
@@ -59,7 +61,6 @@ module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
 }
 
 module outer_box(height=14, wall_w=2, wall_h=3.1) {
-    stand_h = 4.5;
     // outer dimensions
     r_outer=2*wall_w;
     w_outer = pcb_width + 2*wall_w - r_outer;
@@ -89,7 +90,7 @@ module outer_box(height=14, wall_w=2, wall_h=3.1) {
         translate([wall_w + 29.9, wall_w + 48.125, 0])
         cutout(20, 15, 20, 15, wall_h, height);
         // USB cutout
-        translate([wall_w + 14.05, 2 * wall_w + pcb_depth, wall_h + 0.5])
+        translate([wall_w + 14.05, 2 * wall_w + pcb_depth, wall_h + stand_h - 4])
         rotate([90,0,0]) cutout(9.5, 8, 5.5, 4, wall_w/4, wall_w);
     }
 
@@ -126,7 +127,7 @@ module outer_box(height=14, wall_w=2, wall_h=3.1) {
     }
 }
 
-module dove_tail(w1, w2, depth, height, lock_hole_d) {
+module dove_tail(w1, w2, depth, height, lock_hole_d, lock_hole_rim) {
     max_w = max(w1, w2);
     min_w = min(w1, w2);
     diff_w = abs(w1 - w2);
@@ -134,7 +135,7 @@ module dove_tail(w1, w2, depth, height, lock_hole_d) {
         hull() {
             translate([diff_w/2, depth/2, height+lock_hole_d/2])
             rotate([0, 90, 0])
-            cylinder(d=2*lock_hole_d, h=min_w);
+            cylinder(d=lock_hole_d+lock_hole_rim*2, h=min_w);
             translate([max_w/2, 0, 0])
             linear_extrude(height=height)
             polygon(points=[[w1/2, 0], [w2/2, depth], [-w2/2, depth], [-w1/2, 0]]);
@@ -145,7 +146,7 @@ module dove_tail(w1, w2, depth, height, lock_hole_d) {
     }
 }
 
-module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false, lock_hole_d=0) {
+module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false, lock_hole_d=0, lock_hole_rim=0) {
     // check input values
     assert (factor > 0 && factor < 1);
     assert (count > 0);
@@ -158,7 +159,7 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false, lock_hole_
         difference() {
             for (i = [0:count - 1]) {
                 translate([i*w + tol/2, 0, 0])
-                dove_tail(w2, w1, dim[1], dim[2], lock_hole_d);
+                dove_tail(w2, w1, dim[1], dim[2], lock_hole_d, lock_hole_rim);
             }
             translate([-dim[0], dim[1] - tol, -dim[2]])
             cube([3*dim[0], 2*tol, 3*dim[2]]);
@@ -167,7 +168,7 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false, lock_hole_
         difference() {
             for (i = [0:count - 1]) {
                 translate([i*w + w/2 + tol/2, 0, 0])
-                dove_tail(w1, w2, dim[1], dim[2], lock_hole_d);
+                dove_tail(w1, w2, dim[1], dim[2], lock_hole_d, lock_hole_rim);
             }
             translate([-dim[0], -tol, -dim[2]])
             cube([3*dim[0], 2*tol, 3*dim[2]]);
@@ -181,6 +182,10 @@ module split_box(left=true, height=14, wall_w=2, wall_h=3.1) {
     tail_offset = 20;
     tol = 0.4;
     lock_hole_d = 1.75 + 0.55; // PLA strand thickness + radial tolerance
+    lock_hole_rim = 0.7;
+
+    // ensure that the locking mechanism does not interfere with the PCB
+    assert(lock_hole_d + lock_hole_rim <= stand_h - pcb_clearance);
 
     width = pcb_width + 2 * wall_w;
     depth = pcb_depth + 2 * wall_w;
@@ -196,7 +201,7 @@ module split_box(left=true, height=14, wall_w=2, wall_h=3.1) {
         cylinder(d=lock_hole_d, h=depth*3);
     }
     translate([width/2 + tail_depth/2, 10,0]) rotate([0,0,90])
-    dove_tail_array([depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol, lock_hole_d=lock_hole_d);
+    dove_tail_array([depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol, lock_hole_d=lock_hole_d, lock_hole_rim=lock_hole_rim);
 }
 
 module test_dove_tail(wall_w=2, height=14) {

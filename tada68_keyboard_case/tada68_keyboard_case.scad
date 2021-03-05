@@ -20,6 +20,10 @@
 
 use <threads.scad>
 
+// TADA68 dimensions
+pcb_width = 304.8;
+pcb_depth = 95.25;
+
 module pyramid(b_width, t_width, b_depth, t_depth, height) {
     linear_extrude(height=height, scale=[t_width/b_width, t_depth/b_depth]) square([b_width, b_depth], center=true);
 }
@@ -54,17 +58,19 @@ module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
     }
 }
 
-module outer_box(width=311, depth=101, height=14,  wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
+module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
     // TODO determine r_outer and r_inner depending on width, depth and wall thickness
     r_outer=6;
     r_inner=3;
 
     // outer dimensions
-    w_outer = width - r_outer;
-    d_outer = depth - r_outer;
+    w_outer = pcb_width + 2*wall_w - r_outer;
+    d_outer = pcb_depth + 2*wall_d - r_outer;
+
     // inner dimensions
-    w_inner = width - r_inner - 2 * wall_w;
-    d_inner = depth - r_inner - 2 * wall_d;
+    w_inner = pcb_width - r_inner;
+    d_inner = pcb_depth - r_inner;
+
     difference() {
         // outer box
         hull() {
@@ -84,7 +90,7 @@ module outer_box(width=311, depth=101, height=14,  wall_w = 3.1, wall_d=2.875, w
         translate([wall_w + 29.9, wall_d + 48.125, 0])
         cutout(20, 15, 20, 15, wall_h, height);
         // USB cutout
-        translate([wall_w + 14.05, wall_d + 98.125, wall_h + 0.5])
+        translate([wall_w + 14.05, 2 * wall_d + pcb_depth, wall_h + 0.5])
         rotate([90,0,0]) cutout(9.5, 8, 5.5, 4, wall_d/4, wall_d);
     }
 
@@ -105,18 +111,18 @@ module outer_box(width=311, depth=101, height=14,  wall_w = 3.1, wall_d=2.875, w
     outer_stand_h = stand_h - 0.5; // TODO why?
     // outer stands horizontal
     for (rel_outer_stand_pos_h = [
-        [(width - 2 * wall_w) * 0.25, 0, 0],
-        [(width - 2 * wall_w) * 0.25, depth - 2 * wall_d, 0],
-        [(width - 2 * wall_w) * 0.75, 0, 0],
-        [(width - 2 * wall_w) * 0.75, depth - 2 * wall_d, 0],
+        [pcb_width * 0.25, 0, 0],
+        [pcb_width * 0.25, pcb_depth, 0],
+        [pcb_width * 0.75, 0, 0],
+        [pcb_width * 0.75, pcb_depth, 0],
     ]) {
         translate([wall_w, wall_d, wall_h] + rel_outer_stand_pos_h)
         cylinder(h=outer_stand_h, r=wall_d);
     }
     // outer stands vertical
     for (rel_outer_stand_pos_v = [
-        [0                 , depth/2 - wall_d, 0],
-        [width - 2 * wall_w, depth/2 - wall_d, 0],
+        [0        , pcb_depth / 2, 0],
+        [pcb_width, pcb_depth / 2, 0],
     ]) {
         translate([wall_w, wall_d, wall_h] + rel_outer_stand_pos_v)
         cylinder(h=outer_stand_h, r=wall_w);
@@ -159,14 +165,17 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false) {
     }
 }
 
-module split_box(left=true, width=311, depth=101, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
+module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, stand_h=5) {
 
     tail_depth = 6;
     tail_offset = 20;
     tol = 0.4;
 
+    width = pcb_width + 2 * wall_w;
+    depth = pcb_depth + 2 * wall_d;
+
     difference() {
-        outer_box(width, depth, height, wall_w, wall_d, wall_h, stand_h);
+        outer_box(height, wall_w, wall_d, wall_h, stand_h);
         translate([left ? width / 2 : -width / 2, 0, 0]) cube([width, depth, height]);
         translate([width/2 - tol/2, 0, -height]) cube([tol, depth, 3*height]);
         translate([width/2 + tail_depth / 2, tail_offset / 2, -wall_h]) rotate([0,0,90])

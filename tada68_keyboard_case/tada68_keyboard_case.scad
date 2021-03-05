@@ -129,13 +129,26 @@ module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
     }
 }
 
-module dove_tail(w1, w2, depth, height) {
-    translate([max(w1/2, w2/2), 0, 0])
-    linear_extrude(height=height)
-    polygon(points=[[w1/2, 0], [w2/2, depth], [-w2/2, depth], [-w1/2, 0]]);
+module dove_tail(w1, w2, depth, height, lock_hole_d) {
+    max_w = max(w1, w2);
+    min_w = min(w1, w2);
+    diff_w = abs(w1 - w2);
+    difference() {
+        hull() {
+            translate([diff_w/2, depth/2, height+lock_hole_d/2])
+            rotate([0, 90, 0])
+            cylinder(d=2*lock_hole_d, h=min_w);
+            translate([max_w/2, 0, 0])
+            linear_extrude(height=height)
+            polygon(points=[[w1/2, 0], [w2/2, depth], [-w2/2, depth], [-w1/2, 0]]);
+        }
+        translate([0, depth/2, height + lock_hole_d/2])
+        rotate([0, 90, 0])
+        cylinder(d=lock_hole_d, h=max_w);
+    }
 }
 
-module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false) {
+module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false, lock_hole_d=0) {
     // check input values
     assert (factor > 0 && factor < 1);
     assert (count > 0);
@@ -148,7 +161,7 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false) {
         difference() {
             for (i = [0:count - 1]) {
                 translate([i*w + tol/2, 0, 0])
-                dove_tail(w2, w1, dim[1], dim[2]);
+                dove_tail(w2, w1, dim[1], dim[2], lock_hole_d);
             }
             translate([-dim[0], dim[1] - tol, -dim[2]])
             cube([3*dim[0], 2*tol, 3*dim[2]]);
@@ -157,7 +170,7 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false) {
         difference() {
             for (i = [0:count - 1]) {
                 translate([i*w + w/2 + tol/2, 0, 0])
-                dove_tail(w1, w2, dim[1], dim[2]);
+                dove_tail(w1, w2, dim[1], dim[2], lock_hole_d);
             }
             translate([-dim[0], -tol, -dim[2]])
             cube([3*dim[0], 2*tol, 3*dim[2]]);
@@ -170,6 +183,7 @@ module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
     tail_depth = 6;
     tail_offset = 20;
     tol = 0.4;
+    lock_hole_d = 1.75 + 0.55; // PLA strand thickness + radial tolerance
 
     width = pcb_width + 2 * wall_w;
     depth = pcb_depth + 2 * wall_d;
@@ -180,9 +194,12 @@ module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
         translate([width/2 - tol/2, 0, -height]) cube([tol, depth, 3*height]);
         translate([width/2 + tail_depth / 2, tail_offset / 2, -wall_h]) rotate([0,0,90])
         dove_tail_array([depth - tail_offset, tail_depth, 3*wall_h], count=5, invert=left, tol=-tol);
+        translate([width/2, -depth, wall_h + lock_hole_d/2])
+        rotate([-90,0,0])
+        cylinder(d=lock_hole_d, h=depth*3);
     }
     translate([width/2 + tail_depth/2, 10,0]) rotate([0,0,90])
-    dove_tail_array([depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol);
+    dove_tail_array([depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol, lock_hole_d=lock_hole_d);
 }
 
 module test_dove_tail(wall_w=3.1, wall_d=2, height=14) {

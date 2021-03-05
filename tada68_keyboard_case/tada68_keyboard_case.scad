@@ -185,5 +185,23 @@ module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1, s
     dove_tail_array([depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol);
 }
 
-$fn = 100;
-split_box();
+module test_dove_tail(wall_w=3.1, wall_d=2, height=14) {
+    tail_depth = 6;
+    width = pcb_width + 2 * wall_w;
+    depth = pcb_depth + 2 * wall_d;
+    intersection() {
+        split_box(left=true, wall_w=wall_w, wall_d=wall_d, height=height);
+        translate([width/2 - tail_depth, 0, 0]) cube([2*tail_depth, depth, height]);
+    }
+    translate([-2*tail_depth - 1, 0, 0]) intersection() {
+        split_box(left=false, wall_w=wall_w, wall_d=wall_d, height=height);
+        translate([width/2 - tail_depth, 0, 0]) cube([2*tail_depth, depth, height]);
+    }
+}
+
+
+$fn = 40;
+//split_box(left=true);
+//translate([15, 0 ,0]) split_box(left=false);
+test_dove_tail();
+//dove_tail_array([40,10,3],4,0);

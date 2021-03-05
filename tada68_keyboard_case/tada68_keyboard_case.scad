@@ -58,18 +58,15 @@ module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
     }
 }
 
-module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
-    // TODO determine r_outer and r_inner depending on width, depth and wall thickness
-    r_outer=6;
-    r_inner=3;
-
+module outer_box(height=14, wall_w=2, wall_h=3.1) {
     stand_h = 4.5;
-
     // outer dimensions
+    r_outer=2*wall_w;
     w_outer = pcb_width + 2*wall_w - r_outer;
-    d_outer = pcb_depth + 2*wall_d - r_outer;
+    d_outer = pcb_depth + 2*wall_w - r_outer;
 
     // inner dimensions
+    r_inner = wall_w;
     w_inner = pcb_width - r_inner;
     d_inner = pcb_depth - r_inner;
 
@@ -82,18 +79,18 @@ module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
             translate([r_outer, d_outer, 0]) pill(h=height, r=r_outer);
         }
         // inner cutout
-        translate([wall_w, wall_d, wall_h]) hull() {
+        translate([wall_w, wall_w, wall_h]) hull() {
             translate([r_inner, r_inner, 0]) cylinder(h=height, r=r_inner);
             translate([w_inner, r_inner, 0]) cylinder(h=height, r=r_inner);
             translate([w_inner, d_inner, 0]) cylinder(h=height, r=r_inner);
             translate([r_inner, d_inner, 0]) cylinder(h=height, r=r_inner);
         }
         // reset button cutout
-        translate([wall_w + 29.9, wall_d + 48.125, 0])
+        translate([wall_w + 29.9, wall_w + 48.125, 0])
         cutout(20, 15, 20, 15, wall_h, height);
         // USB cutout
-        translate([wall_w + 14.05, 2 * wall_d + pcb_depth, wall_h + 0.5])
-        rotate([90,0,0]) cutout(9.5, 8, 5.5, 4, wall_d/4, wall_d);
+        translate([wall_w + 14.05, 2 * wall_w + pcb_depth, wall_h + 0.5])
+        rotate([90,0,0]) cutout(9.5, 8, 5.5, 4, wall_w/4, wall_w);
     }
 
     // threaded stands
@@ -105,7 +102,7 @@ module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
         [260.15, 66.925, 0], // right-top
         [266.55, 9.575,  0], // right-bottom
     ]) {
-        translate([wall_w, wall_d, wall_h] + rel_stand_pos)
+        translate([wall_w, wall_w, wall_h] + rel_stand_pos)
         threaded_stand(stand_h + 0.5); // TODO fix this offset, seems to be too large
     }
 
@@ -116,15 +113,15 @@ module outer_box(height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
         [pcb_width * 0.75, 0, 0],
         [pcb_width * 0.75, pcb_depth, 0],
     ]) {
-        translate([wall_w, wall_d, wall_h] + rel_outer_stand_pos_h)
-        cylinder(h=stand_h, r=wall_d);
+        translate([wall_w, wall_w, wall_h] + rel_outer_stand_pos_h)
+        cylinder(h=stand_h, r=wall_w);
     }
     // outer stands vertical
     for (rel_outer_stand_pos_v = [
         [0        , pcb_depth / 2, 0],
         [pcb_width, pcb_depth / 2, 0],
     ]) {
-        translate([wall_w, wall_d, wall_h] + rel_outer_stand_pos_v)
+        translate([wall_w, wall_w, wall_h] + rel_outer_stand_pos_v)
         cylinder(h=stand_h, r=wall_w);
     }
 }
@@ -178,7 +175,7 @@ module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false, lock_hole_
     }
 }
 
-module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
+module split_box(left=true, height=14, wall_w=2, wall_h=3.1) {
 
     tail_depth = 6;
     tail_offset = 20;
@@ -186,10 +183,10 @@ module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
     lock_hole_d = 1.75 + 0.55; // PLA strand thickness + radial tolerance
 
     width = pcb_width + 2 * wall_w;
-    depth = pcb_depth + 2 * wall_d;
+    depth = pcb_depth + 2 * wall_w;
 
     difference() {
-        outer_box(height, wall_w, wall_d, wall_h);
+        outer_box(height, wall_w, wall_h);
         translate([left ? width / 2 : -width / 2, 0, 0]) cube([width, depth, height]);
         translate([width/2 - tol/2, 0, -height]) cube([tol, depth, 3*height]);
         translate([width/2 + tail_depth / 2, tail_offset / 2, -wall_h]) rotate([0,0,90])
@@ -202,16 +199,16 @@ module split_box(left=true, height=14, wall_w = 3.1, wall_d=2.875, wall_h=3.1) {
     dove_tail_array([depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol, lock_hole_d=lock_hole_d);
 }
 
-module test_dove_tail(wall_w=3.1, wall_d=2, height=14) {
+module test_dove_tail(wall_w=2, height=14) {
     tail_depth = 6;
     width = pcb_width + 2 * wall_w;
-    depth = pcb_depth + 2 * wall_d;
+    depth = pcb_depth + 2 * wall_w;
     intersection() {
-        split_box(left=true, wall_w=wall_w, wall_d=wall_d, height=height);
+        split_box(left=true, wall_w=wall_w, height=height);
         translate([width/2 - tail_depth, 0, 0]) cube([2*tail_depth, depth, height]);
     }
     translate([-2*tail_depth - 1, 0, 0]) intersection() {
-        split_box(left=false, wall_w=wall_w, wall_d=wall_d, height=height);
+        split_box(left=false, wall_w=wall_w, height=height);
         translate([width/2 - tail_depth, 0, 0]) cube([2*tail_depth, depth, height]);
     }
 }

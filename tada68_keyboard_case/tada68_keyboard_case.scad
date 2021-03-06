@@ -60,7 +60,7 @@ module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
     }
 }
 
-module outer_box(height=14, wall_w=2, wall_h=3.1) {
+module outer_box(height=14, wall_w=2, wall_h=3.1, connector_hole_d=6) {
     // outer dimensions
     r_outer=2*wall_w;
     w_outer = pcb_width + 2*wall_w - r_outer;
@@ -92,6 +92,19 @@ module outer_box(height=14, wall_w=2, wall_h=3.1) {
         // USB cutout
         translate([wall_w + 14.05, 2 * wall_w + pcb_depth, wall_h + stand_h - 4])
         rotate([90,0,0]) cutout(9.5, 8, 5.5, 4, wall_w/4, wall_w);
+        // stand connector holes cutouts
+        for (hole_pos = [
+            [wall_w + 12,                (pcb_depth + 2 * wall_w) * 0.2,  -height],
+            [wall_w + 12,                (pcb_depth + 2 * wall_w) * 0.8,  -height],
+            [wall_w + pcb_width/2 - 7.5, (pcb_depth + 2 * wall_w) * 0.2,  -height],
+            [wall_w + pcb_width/2 - 7.5, (pcb_depth + 2 * wall_w) * 0.8,  -height],
+            [wall_w + pcb_width/2 + 7.5, (pcb_depth + 2 * wall_w) * 0.2,  -height],
+            [wall_w + pcb_width/2 + 7.5, (pcb_depth + 2 * wall_w) * 0.8,  -height],
+            [wall_w + pcb_width - 12,    (pcb_depth + 2 * wall_w) * 0.2,  -height],
+            [wall_w + pcb_width - 12,    (pcb_depth + 2 * wall_w) * 0.8,  -height],
+        ]) {
+            translate(hole_pos) cylinder(d=connector_hole_d,h=3*height);
+        }
     }
 
     // threaded stands
@@ -204,6 +217,50 @@ module split_box(left=true, height=14, wall_w=2, wall_h=2) {
     dove_tail_array([depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol, lock_hole_d=lock_hole_d, lock_hole_rim=lock_hole_rim);
 }
 
+module rounded_cube(dim, r_outer=2) {
+    w_outer = dim[0] - r_outer;
+    d_outer = dim[1] - r_outer;
+    assert(w_outer >= r_outer);
+    assert(d_outer >= r_outer);
+    height = dim[2];
+    hull() {
+        translate([r_outer, r_outer, 0]) pill(h=height, r=r_outer);
+        translate([w_outer, r_outer, 0]) pill(h=height, r=r_outer);
+        translate([w_outer, d_outer, 0]) pill(h=height, r=r_outer);
+        translate([r_outer, d_outer, 0]) pill(h=height, r=r_outer);
+    }
+}
+
+module stand(width, wall_w, wall_h, angle, pairwise=false, connector_hole_d=6-0.1) {
+    depth = pcb_depth + 2 * wall_w;
+
+    difference() {
+        translate([0, depth*0.1, 0])
+        rounded_cube([width, depth*0.8, 20]);
+        rotate([angle, 0, 0])
+        translate([-width, 0, 0])
+        cube([width*3, depth, 20]);
+    }
+
+    // pins
+    positions = pairwise ? [
+        [width/4, depth * 0.2, 0],
+        [width/4, depth * 0.8, 0],
+        [width/4 * 3, depth * 0.2, 0],
+        [width/4 * 3, depth * 0.8, 0],
+    ] :
+    [
+        [width/2, depth * 0.2, 0],
+        [width/2, depth * 0.8, 0],
+    ];
+
+    rotate([angle, 0, 0])
+    for (rel_outer_stand_pos_v = positions) {
+        translate(rel_outer_stand_pos_v)
+        cylinder(h = wall_h, d = connector_hole_d);
+    }
+}
+
 module test_dove_tail(wall_w=2, height=14) {
     tail_depth = 6;
     width = pcb_width + 2 * wall_w;
@@ -218,9 +275,26 @@ module test_dove_tail(wall_w=2, height=14) {
     }
 }
 
+module show_case(height=14, wall_w=2, wall_h=2, angle=5) {
+    rotate([angle, 0, 0]) {
+        split_box(true, height, wall_w, wall_h);
+        split_box(false, height, wall_w, wall_h);
+    }
+
+    single_stand_w = 20;
+    dual_stand_w = 30;
+    width = pcb_width + 2 * wall_w;
+
+    translate([2*wall_w, 0, 0])
+    stand(single_stand_w, wall_w, wall_h, angle);
+    translate([(width - dual_stand_w)/2, 0, 0])
+    stand(dual_stand_w, wall_w, wall_h, angle, pairwise=true);
+    translate([width - single_stand_w - 2*wall_w, 0, 0])
+    stand(single_stand_w, wall_w, wall_h, angle);
+}
+
 
 $fn = 40;
 //split_box(left=true);
-//translate([15, 0 ,0]) split_box(left=false);
-test_dove_tail();
-//dove_tail_array([40,10,3],4,0);
+//test_dove_tail();
+show_case();

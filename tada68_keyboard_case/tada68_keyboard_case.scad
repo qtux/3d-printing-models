@@ -23,7 +23,7 @@ use <threads.scad>
 // TADA68 dimensions
 pcb_width = 304.8;
 pcb_depth = 95.25;
-pcb_clearance = 2; // required space below PCB (aside from the USB connector)
+pcb_clearance = 2.3; // required space below PCB (aside from the USB connector)
 stand_h = 5;
 
 module pyramid(b_width, t_width, b_depth, t_depth, height) {
@@ -91,8 +91,8 @@ module outer_box(height=14, wall_w=2, wall_h=3.1, connector_hole_d=6) {
             translate([r_inner, d_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
         }
         // reset button cutout
-        translate([wall_w + 22, wall_w + pcb_depth/2 - 7.5, 0])
-        cutout(20, 15, 20, 15, wall_h, 1);
+        translate([wall_w + 24, wall_w + pcb_depth/2 - 7.5, 0])
+        cutout(14, 11, 18, 15, wall_h, 1);
         // USB cutout
         translate([wall_w + 14.05, 2 * wall_w + pcb_depth, wall_h + stand_h - 4])
         rotate([90,0,0]) cutout(9.5, 8, 5.5, 4, wall_w/4, wall_w);
@@ -121,13 +121,15 @@ module outer_box(height=14, wall_w=2, wall_h=3.1, connector_hole_d=6) {
         [266.55, 9.575,  0], // right-bottom
     ]) {
         translate([wall_w, wall_w, wall_h] + rel_stand_pos)
-        threaded_stand(stand_h + 0.05);
+        threaded_stand(stand_h);
     }
 
     // outer stands horizontal
     for (rel_outer_stand_pos_h = [
         [pcb_width * 0.25, 0, 0],
         [pcb_width * 0.25, pcb_depth, 0],
+        [pcb_width * 0.5, 0, 0],
+        [pcb_width * 0.5, pcb_depth, 0],
         [pcb_width * 0.75, 0, 0],
         [pcb_width * 0.75, pcb_depth, 0],
     ]) {
@@ -197,12 +199,10 @@ module split_box(left=true, height=14, wall_w=2, wall_h=2) {
 
     tail_depth = 6;
     tail_offset = 20;
-    tol = 0.04;
-    lock_hole_d = 1.75 + 0.55; // PLA strand thickness + radial tolerance
-    lock_hole_rim = 0.7;
-
+    tol = 0;
+    lock_hole_d = 1.75 + 0.25; // PLA strand thickness + radial tolerance
     // ensure that the locking mechanism does not interfere with the PCB
-    assert(lock_hole_d + lock_hole_rim <= stand_h - pcb_clearance);
+    lock_hole_rim = stand_h - pcb_clearance - lock_hole_d;
 
     width = pcb_width + 2 * wall_w;
     depth = pcb_depth + 2 * wall_w;

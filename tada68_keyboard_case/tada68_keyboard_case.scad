@@ -37,10 +37,10 @@ module cutout(b_width, t_width, b_depth, t_depth, b_height, t_height) {
     }
 }
 
-module pill(h, r, s=0.2) {
-    translate([0,0,r*s]) scale([1,1,s]) sphere(r=r);
-    translate([0,0,r*s]) cylinder(h=h-2*r*s, r=r);
-    translate([0,0,h-r*s]) scale([1,1,s]) sphere(r=r);
+module pill(h, r, sb=0.2, st=0.2) {
+    translate([0,0,r*sb]) scale([1,1,sb]) sphere(r=r);    // bottom sphere
+    translate([0,0,r*sb]) cylinder(h=h-r*st-r*sb, r=r);   // middle part
+    translate([0,0,h-r*st]) scale([1,1,st]) sphere(r=r);  // top sphere
 }
 
 module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
@@ -71,20 +71,24 @@ module outer_box(height=14, wall_w=2, wall_h=3.1, connector_hole_d=6) {
     w_inner = pcb_width - r_inner;
     d_inner = pcb_depth - r_inner;
 
+    // radius scaling factors
+    st = 0.2;  // top corner radius scaling factor
+    sb = 0.7;  // bottom corner radius scaling factor
+
     difference() {
         // outer box
         hull() {
-            translate([r_outer, r_outer, 0]) pill(h=height, r=r_outer);
-            translate([w_outer, r_outer, 0]) pill(h=height, r=r_outer);
-            translate([w_outer, d_outer, 0]) pill(h=height, r=r_outer);
-            translate([r_outer, d_outer, 0]) pill(h=height, r=r_outer);
+            translate([r_outer, r_outer, 0]) pill(h=height, r=r_outer, st=st, sb=sb);
+            translate([w_outer, r_outer, 0]) pill(h=height, r=r_outer, st=st, sb=sb);
+            translate([w_outer, d_outer, 0]) pill(h=height, r=r_outer, st=st, sb=sb);
+            translate([r_outer, d_outer, 0]) pill(h=height, r=r_outer, st=st, sb=sb);
         }
         // inner cutout
         translate([wall_w, wall_w, wall_h]) hull() {
-            translate([r_inner, r_inner, 0]) cylinder(h=height, r=r_inner);
-            translate([w_inner, r_inner, 0]) cylinder(h=height, r=r_inner);
-            translate([w_inner, d_inner, 0]) cylinder(h=height, r=r_inner);
-            translate([r_inner, d_inner, 0]) cylinder(h=height, r=r_inner);
+            translate([r_inner, r_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
+            translate([w_inner, r_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
+            translate([w_inner, d_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
+            translate([r_inner, d_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
         }
         // reset button cutout
         translate([wall_w + 22, wall_w + pcb_depth/2 - 7.5, 0])

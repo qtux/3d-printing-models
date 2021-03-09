@@ -83,12 +83,34 @@ module outer_box(height=14, wall_w=2, wall_h=3.1, connector_hole_d=6) {
             translate([w_outer, d_outer, 0]) pill(h=height, r=r_outer, st=st, sb=sb);
             translate([r_outer, d_outer, 0]) pill(h=height, r=r_outer, st=st, sb=sb);
         }
-        // inner cutout
-        translate([wall_w, wall_w, wall_h]) hull() {
-            translate([r_inner, r_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
-            translate([w_inner, r_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
-            translate([w_inner, d_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
-            translate([r_inner, d_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
+        // inner cutout without stands
+        difference() {
+            translate([wall_w, wall_w, wall_h]) hull() {
+                translate([r_inner, r_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
+                translate([w_inner, r_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
+                translate([w_inner, d_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
+                translate([r_inner, d_inner, 0]) pill(h=height, r=r_inner, st=0, sb=sb);
+            }
+            // outer stands horizontal
+            for (rel_outer_stand_pos_h = [
+                [pcb_width * 0.25, 0, 0],
+                [pcb_width * 0.25, pcb_depth, 0],
+                [pcb_width * 0.5, 0, 0],
+                [pcb_width * 0.5, pcb_depth, 0],
+                [pcb_width * 0.75, 0, 0],
+                [pcb_width * 0.75, pcb_depth, 0],
+            ]) {
+                translate([wall_w, wall_w, wall_h] + rel_outer_stand_pos_h)
+                cylinder(h=stand_h, r=wall_w);
+            }
+            // outer stands vertical
+            for (rel_outer_stand_pos_v = [
+                [0        , pcb_depth / 2, 0],
+                [pcb_width, pcb_depth / 2, 0],
+            ]) {
+                translate([wall_w, wall_w, wall_h] + rel_outer_stand_pos_v)
+                cylinder(h=stand_h, r=wall_w);
+            }
         }
         // reset button cutout
         translate([wall_w + 24, wall_w + pcb_depth/2 - 7.5, 0])
@@ -122,27 +144,6 @@ module outer_box(height=14, wall_w=2, wall_h=3.1, connector_hole_d=6) {
     ]) {
         translate([wall_w, wall_w, wall_h] + rel_stand_pos)
         threaded_stand(stand_h);
-    }
-
-    // outer stands horizontal
-    for (rel_outer_stand_pos_h = [
-        [pcb_width * 0.25, 0, 0],
-        [pcb_width * 0.25, pcb_depth, 0],
-        [pcb_width * 0.5, 0, 0],
-        [pcb_width * 0.5, pcb_depth, 0],
-        [pcb_width * 0.75, 0, 0],
-        [pcb_width * 0.75, pcb_depth, 0],
-    ]) {
-        translate([wall_w, wall_w, wall_h] + rel_outer_stand_pos_h)
-        cylinder(h=stand_h, r=wall_w);
-    }
-    // outer stands vertical
-    for (rel_outer_stand_pos_v = [
-        [0        , pcb_depth / 2, 0],
-        [pcb_width, pcb_depth / 2, 0],
-    ]) {
-        translate([wall_w, wall_w, wall_h] + rel_outer_stand_pos_v)
-        cylinder(h=stand_h, r=wall_w);
     }
 }
 

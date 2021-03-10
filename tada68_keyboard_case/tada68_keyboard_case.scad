@@ -200,8 +200,8 @@ module split_box(left=true, height=14, wall_w=2, wall_h=2) {
 
     tail_depth = 6;
     tail_offset = 20;
-    tol = 0;
-    lock_hole_d = 1.75 + 0.25; // PLA strand thickness + radial tolerance
+    tol = 0.01;
+    lock_hole_d = 1.75 + 0.3; // PLA strand thickness + radial tolerance
     // ensure that the locking mechanism does not interfere with the PCB
     lock_hole_rim = stand_h - pcb_clearance - lock_hole_d;
 

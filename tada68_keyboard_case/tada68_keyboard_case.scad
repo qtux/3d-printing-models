@@ -43,17 +43,17 @@ module pill(h, r, sb=0, st=0) {
     translate([0,0,h-r*st]) scale([1,1,st]) sphere(r=r);  // top sphere
 }
 
-module rounded_cube(dim, r_outer=2) {
+module rounded_cube(dim, r_outer=2, sb=0.2, st=0.2) {
     w_outer = dim[0] - r_outer;
     d_outer = dim[1] - r_outer;
     assert(w_outer >= r_outer);
     assert(d_outer >= r_outer);
     height = dim[2];
     hull() {
-        translate([r_outer, r_outer, 0]) pill(h=height, r=r_outer, sb=0.2, st=0.2);
-        translate([w_outer, r_outer, 0]) pill(h=height, r=r_outer, sb=0.2, st=0.2);
-        translate([w_outer, d_outer, 0]) pill(h=height, r=r_outer, sb=0.2, st=0.2);
-        translate([r_outer, d_outer, 0]) pill(h=height, r=r_outer, sb=0.2, st=0.2);
+        translate([r_outer, r_outer, 0]) pill(h=height, r=r_outer, sb=sb, st=st);
+        translate([w_outer, r_outer, 0]) pill(h=height, r=r_outer, sb=sb, st=st);
+        translate([w_outer, d_outer, 0]) pill(h=height, r=r_outer, sb=sb, st=st);
+        translate([r_outer, d_outer, 0]) pill(h=height, r=r_outer, sb=sb, st=st);
     }
 }
 

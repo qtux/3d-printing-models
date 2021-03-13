@@ -241,8 +241,8 @@ module case() {
 module split_case(left=true) {
     tail_depth = 6;
     tail_offset = 20;
-    tol = 0.01;
-    lock_hole_d = 1.75 + 0.3; // PLA strand thickness + radial tolerance
+    tol = 0.04;
+    lock_hole_d = 1.75 + 0.35; // PLA strand thickness + radial tolerance
     // ensure that the locking mechanism does not interfere with the PCB
     lock_hole_rim = stand_h - pcb_clearance - lock_hole_d;
 

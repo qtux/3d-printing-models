@@ -141,7 +141,7 @@ module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
     }
 }
 
-module outer_box(connector_hole_d=6) {
+module case(connector_hole_d=6) {
     // outer dimensions
     r_outer = 2 * wall_w;
     w_outer = case_width - r_outer;
@@ -228,7 +228,7 @@ module outer_box(connector_hole_d=6) {
     }
 }
 
-module split_box(left=true) {
+module split_case(left=true) {
     tail_depth = 6;
     tail_offset = 20;
     tol = 0.01;
@@ -237,7 +237,7 @@ module split_box(left=true) {
     lock_hole_rim = stand_h - pcb_clearance - lock_hole_d;
 
     difference() {
-        outer_box();
+        case();
         translate([left ? case_width / 2 : -case_width / 2, 0, 0]) cube([case_width, case_depth, case_height]);
         translate([case_width/2 - tol/2, 0, -case_height]) cube([tol, case_depth, 3*case_height]);
         translate([case_width/2 + tail_depth / 2, tail_offset / 2, -wall_h]) rotate([0,0,90])
@@ -250,7 +250,7 @@ module split_box(left=true) {
     dove_tail_array([case_depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol, lock_hole_d=lock_hole_d, lock_hole_rim=lock_hole_rim);
 }
 
-module stand(width, angle, pairwise=false, connector_hole_d=6-0.1) {
+module foot(width, angle, pairwise=false, connector_hole_d=6-0.1) {
     difference() {
         translate([0, case_depth*0.1, 0])
         rounded_cube([width, case_depth*0.8, 20]);
@@ -272,8 +272,8 @@ module stand(width, angle, pairwise=false, connector_hole_d=6-0.1) {
     ];
 
     rotate([angle, 0, 0])
-    for (rel_outer_stand_pos_v = positions) {
-        translate(rel_outer_stand_pos_v)
+    for (rel_outer_foot_pos_v = positions) {
+        translate(rel_outer_foot_pos_v)
         cylinder(h = wall_h, d = connector_hole_d);
     }
 }
@@ -281,34 +281,34 @@ module stand(width, angle, pairwise=false, connector_hole_d=6-0.1) {
 module test_dove_tail() {
     tail_depth = 6;
     intersection() {
-        split_box(left=true);
+        split_case(left=true);
         translate([case_width/2 - tail_depth, 0, 0]) cube([2*tail_depth, case_depth, case_height]);
     }
     translate([-2*tail_depth - 1, 0, 0]) intersection() {
-        split_box(left=false);
+        split_case(left=false);
         translate([case_width/2 - tail_depth, 0, 0]) cube([2*tail_depth, case_depth, case_height]);
     }
 }
 
 module show_case(angle=5) {
     rotate([angle, 0, 0]) {
-        split_box(left=true);
-        split_box(left=false);
+        split_case(left=true);
+        split_case(left=false);
     }
 
-    single_stand_w = 20;
-    dual_stand_w = 30;
+    single_foot_w = 20;
+    dual_foot_w = 30;
 
     translate([2*wall_w, 0, 0])
-    stand(single_stand_w, angle);
-    translate([(case_width - dual_stand_w)/2, 0, 0])
-    stand(dual_stand_w, angle, pairwise=true);
-    translate([case_width - single_stand_w - 2*wall_w, 0, 0])
-    stand(single_stand_w, angle);
+    foot(single_foot_w, angle);
+    translate([(case_width - dual_foot_w)/2, 0, 0])
+    foot(dual_foot_w, angle, pairwise=true);
+    translate([case_width - single_foot_w - 2*wall_w, 0, 0])
+    foot(single_foot_w, angle);
 }
 
 
 $fn = 40;
-//split_box(left=true);
+//split_case(left=true);
 //test_dove_tail();
 show_case();

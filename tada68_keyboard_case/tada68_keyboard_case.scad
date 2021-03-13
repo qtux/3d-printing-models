@@ -2,7 +2,7 @@
  * Keyboard case for a TADA68 keyboard housing -- inspired by the work of
  * DjDionisos <https://www.thingiverse.com/thing:3011943>
  *
- * Copyright (C) 2020  Matthias Gazzari
+ * Copyright (C) 2020-2021  Matthias Gazzari
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,96 @@
 
 use <threads.scad>
 
+// -----------------------------------------------------------------------------
+// project independent helper modules
+// -----------------------------------------------------------------------------
+
+module pyramid(b_width, t_width, b_depth, t_depth, height) {
+    linear_extrude(height=height, scale=[t_width/b_width, t_depth/b_depth])
+    square([b_width, b_depth], center=true);
+}
+
+module cutout(b_width, t_width, b_depth, t_depth, b_height, t_height) {
+    union() {
+        cube([t_width,t_depth,t_height+b_height]);
+        translate([t_width/2, t_depth/2, 0])
+        pyramid(b_width, t_width, b_depth, t_depth, b_height);
+    }
+}
+
+module pill(h, r, sb=0, st=0) {
+    translate([0,0,r*sb]) scale([1,1,sb]) sphere(r=r);    // bottom sphere
+    translate([0,0,r*sb]) cylinder(h=h-r*st-r*sb, r=r);   // middle part
+    translate([0,0,h-r*st]) scale([1,1,st]) sphere(r=r);  // top sphere
+}
+
+module rounded_cube(dim, r_outer=2) {
+    w_outer = dim[0] - r_outer;
+    d_outer = dim[1] - r_outer;
+    assert(w_outer >= r_outer);
+    assert(d_outer >= r_outer);
+    height = dim[2];
+    hull() {
+        translate([r_outer, r_outer, 0]) pill(h=height, r=r_outer, sb=0.2, st=0.2);
+        translate([w_outer, r_outer, 0]) pill(h=height, r=r_outer, sb=0.2, st=0.2);
+        translate([w_outer, d_outer, 0]) pill(h=height, r=r_outer, sb=0.2, st=0.2);
+        translate([r_outer, d_outer, 0]) pill(h=height, r=r_outer, sb=0.2, st=0.2);
+    }
+}
+
+module dove_tail(w1, w2, depth, height, lock_hole_d, lock_hole_rim) {
+    max_w = max(w1, w2);
+    min_w = min(w1, w2);
+    diff_w = abs(w1 - w2);
+    difference() {
+        hull() {
+            translate([diff_w/2, depth/2, height+lock_hole_d/2])
+            rotate([0, 90, 0])
+            cylinder(d=lock_hole_d+lock_hole_rim*2, h=min_w);
+            translate([max_w/2, 0, 0])
+            linear_extrude(height=height)
+            polygon(points=[[w1/2, 0], [w2/2, depth], [-w2/2, depth], [-w1/2, 0]]);
+        }
+        translate([0, depth/2, height + lock_hole_d/2])
+        rotate([0, 90, 0])
+        cylinder(d=lock_hole_d, h=max_w);
+    }
+}
+
+module dove_tail_array(dim, count, tol=0, factor=0.6, invert=false, lock_hole_d=0, lock_hole_rim=0) {
+    // check input values
+    assert (factor > 0 && factor < 1);
+    assert (count > 0);
+    // determine width of dove tails
+    w = dim[0] / (count + abs(0.5 - factor));
+    w1 = w * factor - tol;
+    w2 = w * (1-factor) - tol;
+    // place dove tails in an array
+    if (invert) {
+        difference() {
+            for (i = [0:count - 1]) {
+                translate([i*w + tol/2, 0, 0])
+                dove_tail(w2, w1, dim[1], dim[2], lock_hole_d, lock_hole_rim);
+            }
+            translate([-dim[0], dim[1] - tol, -dim[2]])
+            cube([3*dim[0], 2*tol, 3*dim[2]]);
+        }
+    } else {
+        difference() {
+            for (i = [0:count - 1]) {
+                translate([i*w + w/2 + tol/2, 0, 0])
+                dove_tail(w1, w2, dim[1], dim[2], lock_hole_d, lock_hole_rim);
+            }
+            translate([-dim[0], -tol, -dim[2]])
+            cube([3*dim[0], 2*tol, 3*dim[2]]);
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// TADA68 related dimensions and helper modules
+// -----------------------------------------------------------------------------
+
 // TADA68 dimensions
 pcb_width = 304.8;
 pcb_depth = 95.25;
@@ -33,23 +123,6 @@ wall_h = 2;
 case_height = 14; // TODO derive from wall_h + stand_h + pcb_height + some offset
 case_width = pcb_width + 2 * wall_w;
 case_depth = pcb_depth + 2 * wall_w;
-
-module pyramid(b_width, t_width, b_depth, t_depth, height) {
-    linear_extrude(height=height, scale=[t_width/b_width, t_depth/b_depth]) square([b_width, b_depth], center=true);
-}
-
-module cutout(b_width, t_width, b_depth, t_depth, b_height, t_height) {
-    union() {
-        cube([t_width,t_depth,t_height+b_height]);
-        translate([t_width/2, t_depth/2, 0]) pyramid(b_width, t_width, b_depth, t_depth, b_height);
-    }
-}
-
-module pill(h, r, sb=0.2, st=0.2) {
-    translate([0,0,r*sb]) scale([1,1,sb]) sphere(r=r);    // bottom sphere
-    translate([0,0,r*sb]) cylinder(h=h-r*st-r*sb, r=r);   // middle part
-    translate([0,0,h-r*st]) scale([1,1,st]) sphere(r=r);  // top sphere
-}
 
 module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
     // ensure that screw fits into stand
@@ -155,57 +228,7 @@ module outer_box(connector_hole_d=6) {
     }
 }
 
-module dove_tail(w1, w2, depth, height, lock_hole_d, lock_hole_rim) {
-    max_w = max(w1, w2);
-    min_w = min(w1, w2);
-    diff_w = abs(w1 - w2);
-    difference() {
-        hull() {
-            translate([diff_w/2, depth/2, height+lock_hole_d/2])
-            rotate([0, 90, 0])
-            cylinder(d=lock_hole_d+lock_hole_rim*2, h=min_w);
-            translate([max_w/2, 0, 0])
-            linear_extrude(height=height)
-            polygon(points=[[w1/2, 0], [w2/2, depth], [-w2/2, depth], [-w1/2, 0]]);
-        }
-        translate([0, depth/2, height + lock_hole_d/2])
-        rotate([0, 90, 0])
-        cylinder(d=lock_hole_d, h=max_w);
-    }
-}
-
-module dove_tail_array(dim, count=4, tol=0, factor=0.6, invert=false, lock_hole_d=0, lock_hole_rim=0) {
-    // check input values
-    assert (factor > 0 && factor < 1);
-    assert (count > 0);
-    // determine width of dove tails
-    w = dim[0] / (count + abs(0.5 - factor));
-    w1 = w * factor - tol;
-    w2 = w * (1-factor) - tol;
-    // place dove tails in an array
-    if (invert) {
-        difference() {
-            for (i = [0:count - 1]) {
-                translate([i*w + tol/2, 0, 0])
-                dove_tail(w2, w1, dim[1], dim[2], lock_hole_d, lock_hole_rim);
-            }
-            translate([-dim[0], dim[1] - tol, -dim[2]])
-            cube([3*dim[0], 2*tol, 3*dim[2]]);
-        }
-    } else {
-        difference() {
-            for (i = [0:count - 1]) {
-                translate([i*w + w/2 + tol/2, 0, 0])
-                dove_tail(w1, w2, dim[1], dim[2], lock_hole_d, lock_hole_rim);
-            }
-            translate([-dim[0], -tol, -dim[2]])
-            cube([3*dim[0], 2*tol, 3*dim[2]]);
-        }
-    }
-}
-
 module split_box(left=true) {
-
     tail_depth = 6;
     tail_offset = 20;
     tol = 0.01;
@@ -225,20 +248,6 @@ module split_box(left=true) {
     }
     translate([case_width/2 + tail_depth/2, 10,0]) rotate([0,0,90])
     dove_tail_array([case_depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol, lock_hole_d=lock_hole_d, lock_hole_rim=lock_hole_rim);
-}
-
-module rounded_cube(dim, r_outer=2) {
-    w_outer = dim[0] - r_outer;
-    d_outer = dim[1] - r_outer;
-    assert(w_outer >= r_outer);
-    assert(d_outer >= r_outer);
-    height = dim[2];
-    hull() {
-        translate([r_outer, r_outer, 0]) pill(h=height, r=r_outer);
-        translate([w_outer, r_outer, 0]) pill(h=height, r=r_outer);
-        translate([w_outer, d_outer, 0]) pill(h=height, r=r_outer);
-        translate([r_outer, d_outer, 0]) pill(h=height, r=r_outer);
-    }
 }
 
 module stand(width, angle, pairwise=false, connector_hole_d=6-0.1) {

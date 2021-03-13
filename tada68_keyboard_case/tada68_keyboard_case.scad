@@ -284,7 +284,7 @@ module foot(width, pairwise=false) {
     rotate([foot_angle, 0, 0])
     for (rel_outer_foot_pos_v = positions) {
         translate(rel_outer_foot_pos_v + [0, 0, -sin(foot_angle) * case_r_outer])
-        cylinder(h=wall_h, d=foot_con_hole_d);
+        pill(h=wall_h + stand_h - pcb_clearance, r=foot_con_hole_d/2, st=0.5);
     }
 }
 

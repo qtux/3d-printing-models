@@ -106,6 +106,23 @@ module dove_tail_array(dim, count, tol=0, factor=0.6, invert=false, lock_hole_d=
     }
 }
 
+module threaded_stand(h, r, s_h, s_d, rim) {
+    // ensure that screw fits into stand
+    assert(s_h <= h);
+    assert(s_d + rim <= r * 2);
+    difference() {
+        cylinder(h=h, r=r);
+        translate([0, 0, h - s_h])
+        metric_thread(
+            diameter=s_d,
+            pitch=screw_pitch,
+            length=s_h,
+            internal=true,
+            test=$preview
+        );
+    }
+}
+
 // -----------------------------------------------------------------------------
 // TADA68 related dimensions and helper modules
 // -----------------------------------------------------------------------------
@@ -125,27 +142,14 @@ case_width = pcb_width + 2 * wall_w;
 case_depth = pcb_depth + 2 * wall_w;
 case_con_hole_d = 6;
 
+// screw dimensions
+screw_h = 3.5 + 0.5;  // real screw height + 0.5 mm offset
+screw_d = 2;
+screw_pitch = 0.5;    // 3.5 mm travel per 7 turns
+
 // foot & connector dimensions
 foot_con_hole_d = case_con_hole_d - 0.1;
 foot_angle = 5;
-
-
-module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
-    // ensure that screw fits into stand
-    assert(screw_h <= stand_h);
-    assert(screw_d + 1 <= stand_r * 2);
-    difference() {
-        cylinder(h=stand_h, r=stand_r);
-        translate([0, 0, stand_h - screw_h])
-        metric_thread(
-            diameter=screw_d,
-            pitch=0.5,             // 3.5 mm travel per 7 turns
-            length=screw_h + 0.5,  // real screw height + 0.5 mm offset
-            internal=true,
-            test=$preview          // don't show threads in preview
-        );
-    }
-}
 
 module case() {
     // outer dimensions
@@ -230,7 +234,7 @@ module case() {
         [266.55, 9.575,  0], // right-bottom
     ]) {
         translate([wall_w, wall_w, wall_h] + rel_stand_pos)
-        threaded_stand(stand_h);
+        threaded_stand(stand_h, 2.5, screw_h, screw_d, 1);
     }
 }
 

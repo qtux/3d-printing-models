@@ -123,6 +123,12 @@ wall_h = 2;
 case_height = 14; // TODO derive from wall_h + stand_h + pcb_height + some offset
 case_width = pcb_width + 2 * wall_w;
 case_depth = pcb_depth + 2 * wall_w;
+case_con_hole_d = 6;
+
+// foot & connector dimensions
+foot_con_hole_d = case_con_hole_d - 0.1;
+foot_angle = 5;
+
 
 module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
     // ensure that screw fits into stand
@@ -141,7 +147,7 @@ module threaded_stand(stand_h, stand_r=2.5, screw_h=3.5, screw_d=2) {
     }
 }
 
-module case(connector_hole_d=6) {
+module case() {
     // outer dimensions
     r_outer = 2 * wall_w;
     w_outer = case_width - r_outer;
@@ -210,7 +216,7 @@ module case(connector_hole_d=6) {
             [case_width - wall_w - 12, case_depth * 0.2, -case_height],
             [case_width - wall_w - 12, case_depth * 0.8, -case_height],
         ]) {
-            translate(hole_pos) cylinder(d=connector_hole_d, h=3*case_height);
+            translate(hole_pos) cylinder(d=case_con_hole_d, h=3*case_height);
         }
     }
 
@@ -250,11 +256,11 @@ module split_case(left=true) {
     dove_tail_array([case_depth - tail_offset, tail_depth, wall_h], count=5, invert=!left, tol=tol, lock_hole_d=lock_hole_d, lock_hole_rim=lock_hole_rim);
 }
 
-module foot(width, angle, pairwise=false, connector_hole_d=6-0.1) {
+module foot(width, pairwise=false) {
     difference() {
         translate([0, case_depth*0.1, 0])
         rounded_cube([width, case_depth*0.8, 20]);
-        rotate([angle, 0, 0])
+        rotate([foot_angle, 0, 0])
         translate([-width, 0, 0])
         cube([width*3, case_depth, 20]);
     }
@@ -271,10 +277,10 @@ module foot(width, angle, pairwise=false, connector_hole_d=6-0.1) {
         [width/2, case_depth * 0.8, 0],
     ];
 
-    rotate([angle, 0, 0])
+    rotate([foot_angle, 0, 0])
     for (rel_outer_foot_pos_v = positions) {
         translate(rel_outer_foot_pos_v)
-        cylinder(h = wall_h, d = connector_hole_d);
+        cylinder(h=wall_h, d=foot_con_hole_d);
     }
 }
 
@@ -290,8 +296,8 @@ module test_dove_tail() {
     }
 }
 
-module show_case(angle=5) {
-    rotate([angle, 0, 0]) {
+module show_case() {
+    rotate([foot_angle, 0, 0]) {
         split_case(left=true);
         split_case(left=false);
     }
@@ -300,11 +306,11 @@ module show_case(angle=5) {
     dual_foot_w = 30;
 
     translate([2*wall_w, 0, 0])
-    foot(single_foot_w, angle);
+    foot(single_foot_w);
     translate([(case_width - dual_foot_w)/2, 0, 0])
-    foot(dual_foot_w, angle, pairwise=true);
+    foot(dual_foot_w, pairwise=true);
     translate([case_width - single_foot_w - 2*wall_w, 0, 0])
-    foot(single_foot_w, angle);
+    foot(single_foot_w);
 }
 
 

@@ -265,7 +265,7 @@ module foot(width, pairwise=false) {
         translate([0, case_depth*0.1, 0])
         rounded_cube([width, case_depth*0.8, 20]);
         rotate([foot_angle, 0, 0])
-        translate([-width, 0, 0])
+        translate([-width, 0, -sin(foot_angle) * case_r_outer])
         cube([width*3, case_depth, 20]);
     }
 
@@ -283,7 +283,7 @@ module foot(width, pairwise=false) {
 
     rotate([foot_angle, 0, 0])
     for (rel_outer_foot_pos_v = positions) {
-        translate(rel_outer_foot_pos_v)
+        translate(rel_outer_foot_pos_v + [0, 0, -sin(foot_angle) * case_r_outer])
         cylinder(h=wall_h, d=foot_con_hole_d);
     }
 }
@@ -301,7 +301,8 @@ module test_dove_tail() {
 }
 
 module show_case() {
-    rotate([foot_angle, 0, 0]) {
+    rotate([foot_angle, 0, 0])
+    translate([0, 0, -sin(foot_angle) * case_r_outer]) {
         split_case(left=true);
         split_case(left=false);
     }
@@ -315,6 +316,7 @@ module show_case() {
     foot(dual_foot_w, pairwise=true);
     translate([case_width - single_foot_w - 2*wall_w, 0, 0])
     foot(single_foot_w);
+    #translate([0,0,-10]) cube([case_width, case_depth, 10]);
 }
 
 

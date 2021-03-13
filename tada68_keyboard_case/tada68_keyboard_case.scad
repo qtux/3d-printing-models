@@ -137,6 +137,8 @@ stand_h = 5;
 assert(stand_h >= pcb_clearance);
 wall_w = 2;
 wall_h = 2;
+case_r_outer = 2 * wall_w;
+case_r_inner = wall_w;
 case_height = 14; // TODO derive from wall_h + stand_h + pcb_height + some offset
 case_width = pcb_width + 2 * wall_w;
 case_depth = pcb_depth + 2 * wall_w;
@@ -153,14 +155,12 @@ foot_angle = 5;
 
 module case() {
     // outer dimensions
-    r_outer = 2 * wall_w;
-    w_outer = case_width - r_outer;
-    d_outer = case_depth - r_outer;
+    box_width = case_width - case_r_outer;
+    box_depth = case_depth - case_r_outer;
 
     // inner dimensions
-    r_inner = wall_w;
-    w_inner = pcb_width - r_inner;
-    d_inner = pcb_depth - r_inner;
+    cutout_width = pcb_width - case_r_inner;
+    cutout_depth = pcb_depth - case_r_inner;
 
     // radius scaling factors
     st = 0.2;  // top corner radius scaling factor
@@ -169,18 +169,18 @@ module case() {
     difference() {
         // outer box
         hull() {
-            translate([r_outer, r_outer, 0]) pill(h=case_height, r=r_outer, st=st, sb=sb);
-            translate([w_outer, r_outer, 0]) pill(h=case_height, r=r_outer, st=st, sb=sb);
-            translate([w_outer, d_outer, 0]) pill(h=case_height, r=r_outer, st=st, sb=sb);
-            translate([r_outer, d_outer, 0]) pill(h=case_height, r=r_outer, st=st, sb=sb);
+            translate([case_r_outer, case_r_outer, 0]) pill(h=case_height, r=case_r_outer, st=st, sb=sb);
+            translate([box_width,    case_r_outer, 0]) pill(h=case_height, r=case_r_outer, st=st, sb=sb);
+            translate([box_width,    box_depth,    0]) pill(h=case_height, r=case_r_outer, st=st, sb=sb);
+            translate([case_r_outer, box_depth,    0]) pill(h=case_height, r=case_r_outer, st=st, sb=sb);
         }
         // inner cutout without stands
         difference() {
             translate([wall_w, wall_w, wall_h]) hull() {
-                translate([r_inner, r_inner, 0]) pill(h=case_height, r=r_inner, st=0, sb=sb);
-                translate([w_inner, r_inner, 0]) pill(h=case_height, r=r_inner, st=0, sb=sb);
-                translate([w_inner, d_inner, 0]) pill(h=case_height, r=r_inner, st=0, sb=sb);
-                translate([r_inner, d_inner, 0]) pill(h=case_height, r=r_inner, st=0, sb=sb);
+                translate([case_r_inner, case_r_inner, 0]) pill(h=case_height, r=case_r_inner, st=0, sb=sb);
+                translate([cutout_width, case_r_inner, 0]) pill(h=case_height, r=case_r_inner, st=0, sb=sb);
+                translate([cutout_width, cutout_depth, 0]) pill(h=case_height, r=case_r_inner, st=0, sb=sb);
+                translate([case_r_inner, cutout_depth, 0]) pill(h=case_height, r=case_r_inner, st=0, sb=sb);
             }
             // outer stands horizontal
             for (rel_outer_stand_pos_h = [

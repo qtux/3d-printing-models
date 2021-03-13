@@ -149,9 +149,9 @@ screw_h = 3.5 + 0.5;  // real screw height + 0.5 mm offset
 screw_d = 2;
 screw_pitch = 0.5;    // 3.5 mm travel per 7 turns
 
-// foot & connector dimensions
-foot_con_hole_d = case_con_hole_d - 0.1;
-foot_angle = 5;
+// foot dimensions
+foot_con_hole_d = case_con_hole_d; // TODO subtract an offset for easier assembly
+foot_angle = 4;
 
 module case() {
     // outer dimensions

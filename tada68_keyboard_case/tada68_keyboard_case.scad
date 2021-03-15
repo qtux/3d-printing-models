@@ -262,8 +262,8 @@ module split_case(left=true) {
 
 module foot(width, pairwise=false) {
     difference() {
-        translate([0, case_depth*0.1, 0])
-        rounded_cube([width, case_depth*0.8, 20]);
+        translate([0, case_depth*0.15, 0])
+        rounded_cube([width, case_depth*0.7, 20]);
         rotate([foot_angle, 0, 0])
         translate([-width, 0, -sin(foot_angle) * case_r_outer])
         cube([width*3, case_depth, 20]);
@@ -324,3 +324,5 @@ $fn = 40;
 //split_case(left=true);
 //test_dove_tail();
 show_case();
+//foot(20);
+//foot(30, pairwise=true);

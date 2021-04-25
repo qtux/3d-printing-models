@@ -12,7 +12,7 @@ water_can_size = 12.5;
 
 back_wall_height = height/2;
 
-beak_scale_factor = 1.5;
+beak_scale_factor = 2;
 
 width_scale_factor = 2;
 
